@@ -1,9 +1,12 @@
 {
+    "homepage": "https://Jcsumugat.github.io/PRAND-System",
     "private": true,
     "type": "module",
     "scripts": {
         "dev": "vite",
-        "build": "vite build"
+        "build": "vite build",
+        "predeploy": "npm run build",
+        "deploy": "gh-pages -d public/build"
     },
     "devDependencies": {
         "@headlessui/react": "^2.0.0",
@@ -12,6 +15,7 @@
         "@vitejs/plugin-react": "^4.2.0",
         "autoprefixer": "^10.4.12",
         "axios": "^1.11.0",
+        "gh-pages": "^6.3.0",
         "laravel-vite-plugin": "^2.0.0",
         "postcss": "^8.4.31",
         "react": "^18.2.0",

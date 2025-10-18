@@ -3,16 +3,16 @@ import laravel from 'laravel-vite-plugin';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig({
-    base: '/PRAND-System/', // 👈 required for GitHub Pages
+    base: '/', // 👈 Changed for Railway (remove '/PRAND-System/' for GitHub Pages)
     plugins: [
         laravel({
-            input: ['resources/js/app.jsx'], // Laravel entry point
+            input: ['resources/js/app.jsx'], // Keep as is for React
             refresh: true,
         }),
         react(),
     ],
     build: {
-        outDir: 'public/build', // 👈 ensures build output goes here
+        outDir: 'public/build',
         emptyOutDir: true,
     },
 });

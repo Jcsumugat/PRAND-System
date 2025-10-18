@@ -3,10 +3,10 @@ import laravel from 'laravel-vite-plugin';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig({
-    base: '/', // 👈 Changed for Railway (remove '/PRAND-System/' for GitHub Pages)
+    base: '/', // 👈 Changed for Railway
     plugins: [
         laravel({
-            input: ['resources/js/app.jsx'], // Keep as is for React
+            input: ['resources/js/app.jsx'],
             refresh: true,
         }),
         react(),

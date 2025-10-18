@@ -51,11 +51,12 @@ export default function Index({ payments, filters }) {
                     </div>
                     <Link
                         href={route('payments.create')}
-                        className="flex items-center px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold rounded-lg hover:from-green-700 hover:to-emerald-700 transition shadow-lg"
+                        className="flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-pink-700 transition shadow-lg"
                     >
                         <PlusIcon className="h-5 w-5 mr-2" />
                         Record Payment
                     </Link>
+
                 </div>
 
                 {/* Search and Filter */}
@@ -158,8 +159,8 @@ export default function Index({ payments, filters }) {
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getMethodBadge(payment.payment_method)}`}>
                                                     {payment.payment_method === 'gcash' ? 'GCash' :
-                                                     payment.payment_method === 'bank_transfer' ? 'Bank Transfer' :
-                                                     payment.payment_method.charAt(0).toUpperCase() + payment.payment_method.slice(1)}
+                                                        payment.payment_method === 'bank_transfer' ? 'Bank Transfer' :
+                                                            payment.payment_method.charAt(0).toUpperCase() + payment.payment_method.slice(1)}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
@@ -223,13 +224,12 @@ export default function Index({ payments, filters }) {
                                         <Link
                                             key={index}
                                             href={link.url || '#'}
-                                            className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
-                                                link.active
+                                            className={`px-4 py-2 text-sm font-medium rounded-lg transition ${link.active
                                                     ? 'bg-green-600 text-white'
                                                     : link.url
-                                                    ? 'bg-white text-gray-700 hover:bg-green-50 border border-gray-300'
-                                                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                            }`}
+                                                        ? 'bg-white text-gray-700 hover:bg-green-50 border border-gray-300'
+                                                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                                }`}
                                             dangerouslySetInnerHTML={{ __html: link.label }}
                                             preserveState
                                         />

@@ -3,6 +3,12 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DeceasedRecordController;
+use App\Http\Controllers\PaymentRecordController;
+use App\Http\Controllers\RenewalRecordController;
+use App\Http\Controllers\NoticeDistributionController;
+use App\Http\Controllers\MapController;
 
 Route::get('/', function () {
     if (Auth::check()) {
@@ -34,6 +40,22 @@ Route::post('/logout', function (Request $request) {
     return redirect('/');
 })->name('logout');
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware('auth')->name('dashboard');
+Route::middleware('auth')->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Deceased Records
+    Route::resource('deceased', DeceasedRecordController::class);
+
+    // Payment Records
+    Route::resource('payments', PaymentRecordController::class);
+
+    // Renewal Records
+    Route::resource('renewals', RenewalRecordController::class);
+
+    // Notice Distributions
+    Route::resource('notices', NoticeDistributionController::class);
+    Route::post('notices/{notice}/resend', [NoticeDistributionController::class, 'resend'])->name('notices.resend');
+
+    // Map
+    Route::get('/map', [MapController::class, 'index'])->name('map.index');
+});

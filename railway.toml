@@ -1,2 +1,0 @@
-[deploy]
-startCommand = "ls -lah /app/public/build/ && cat /app/public/build/manifest.json && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT"

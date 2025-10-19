@@ -3,17 +3,21 @@ nixPkgs = ['php82', 'nodejs-18_x']
 
 [phases.install]
 cmds = [
-    'composer install --no-dev --optimize-autoloader --no-interaction',
-    'npm ci --prefer-offline --no-audit'
+    'composer install --no-dev --optimize-autoloader',
+    'npm ci'
 ]
 
 [phases.build]
 cmds = [
     'npm run build',
+    'echo "=== Checking build output ==="',
+    'ls -la public/',
+    'ls -la public/build/ || echo "Build directory missing!"',
+    'test -f public/build/manifest.json && echo "Manifest exists" || echo "Manifest missing!"',
     'php artisan config:cache',
     'php artisan route:cache',
     'php artisan view:cache'
 ]
 
 [start]
-cmd = 'php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT'
+cmd = 'ls -la public/build/ && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT'

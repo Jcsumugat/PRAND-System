@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import {
     HomeIcon,
     UserPlusIcon,
@@ -12,17 +12,22 @@ import {
     XMarkIcon
 } from '@heroicons/react/24/outline';
 
-export default function Sidebar({ currentRoute }) {
+export default function Sidebar() {
     const [isOpen, setIsOpen] = useState(false);
+    const page = usePage();
+    const { auth } = page.props;
+
+    // Get the component name from the page
+    const currentRoute = page.component;
 
     const navigation = [
-        { name: 'Dashboard', href: route('dashboard'), icon: HomeIcon, current: currentRoute === 'dashboard' },
-        { name: 'Registration', href: route('deceased.create'), icon: UserPlusIcon, current: currentRoute === 'deceased.create' },
-        { name: 'Deceased Records', href: route('deceased.index'), icon: DocumentTextIcon, current: currentRoute === 'deceased.index' },
-        { name: 'Payment Records', href: route('payments.index'), icon: CreditCardIcon, current: currentRoute === 'payments.index' },
-        { name: 'Renewal Records', href: route('renewals.index'), icon: ArrowPathIcon, current: currentRoute === 'renewals.index' },
-        { name: 'Notice Distribution', href: route('notices.index'), icon: BellIcon, current: currentRoute === 'notices.index' },
-        { name: 'Map', href: route('map.index'), icon: MapIcon, current: currentRoute === 'map.index' },
+        { name: 'Dashboard', href: '/dashboard', component: 'Dashboard', icon: HomeIcon },
+        { name: 'Registration', href: '/deceased/create', component: 'DeceasedRecords/Create', icon: UserPlusIcon },
+        { name: 'Deceased Records', href: '/deceased', component: 'DeceasedRecords', icon: DocumentTextIcon },
+        { name: 'Payment Records', href: '/payments', component: 'PaymentRecords', icon: CreditCardIcon },
+        { name: 'Renewal Records', href: '/renewals', component: 'RenewalRecords', icon: ArrowPathIcon },
+        { name: 'Notice Distribution', href: '/notices', component: 'NoticeDistributions', icon: BellIcon },
+        { name: 'Map', href: '/map', component: 'Map', icon: MapIcon },
     ];
 
     return (
@@ -72,12 +77,29 @@ export default function Sidebar({ currentRoute }) {
                         <div className="space-y-1">
                             {navigation.map((item) => {
                                 const Icon = item.icon;
+
+                                // Special handling for Registration vs Deceased Records
+                                let isActive;
+                                if (item.component === 'DeceasedRecords/Create') {
+                                    // Registration: only exact match
+                                    isActive = currentRoute === 'DeceasedRecords/Create';
+                                } else if (item.component === 'DeceasedRecords') {
+                                    // Deceased Records: match DeceasedRecords but exclude Create
+                                    isActive = currentRoute &&
+                                              currentRoute.startsWith('DeceasedRecords') &&
+                                              currentRoute !== 'DeceasedRecords/Create';
+                                } else {
+                                    // All other items: normal startsWith matching
+                                    isActive = currentRoute === item.component ||
+                                              (currentRoute && currentRoute.startsWith(item.component));
+                                }
+
                                 return (
                                     <Link
                                         key={item.name}
                                         href={item.href}
                                         className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
-                                            item.current
+                                            isActive
                                                 ? 'bg-purple-600 text-white shadow-lg'
                                                 : 'text-gray-700 hover:bg-purple-200 hover:text-purple-900'
                                         }`}
@@ -96,20 +118,20 @@ export default function Sidebar({ currentRoute }) {
                         <div className="flex items-center space-x-3 mb-3">
                             <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
                                 <span className="text-white font-semibold text-sm">
-                                    {window.Laravel?.user?.name?.charAt(0) || 'U'}
+                                    {auth?.user?.name?.charAt(0) || 'U'}
                                 </span>
                             </div>
                             <div className="flex-1 min-w-0">
                                 <p className="text-sm font-medium text-gray-900 truncate">
-                                    {window.Laravel?.user?.name || 'User'}
+                                    {auth?.user?.name || 'User'}
                                 </p>
                                 <p className="text-xs text-gray-500 truncate">
-                                    {window.Laravel?.user?.email || 'user@email.com'}
+                                    {auth?.user?.email || 'user@email.com'}
                                 </p>
                             </div>
                         </div>
                         <Link
-                            href={route('logout')}
+                            href="/logout"
                             method="post"
                             as="button"
                             className="w-full px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-lg hover:bg-red-600 transition"

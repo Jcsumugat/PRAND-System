@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
-import { PencilIcon, EyeIcon, TrashIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { PencilIcon, TrashIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 
 export default function Index({ deceased, filters }) {
     const [search, setSearch] = useState(filters.search || '');
@@ -71,7 +71,7 @@ export default function Index({ deceased, filters }) {
                         </select>
                         <button
                             type="submit"
-                            className="px-6 py-2 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition"
+                            className="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition"
                         >
                             Search
                         </button>
@@ -153,25 +153,18 @@ export default function Index({ deceased, filters }) {
                                             <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                                                 <div className="flex justify-center space-x-2">
                                                     <Link
-                                                        href={route('deceased.show', record.id)}
-                                                        className="text-blue-600 hover:text-blue-900 p-2 rounded-lg hover:bg-blue-50 transition"
-                                                        title="View"
-                                                    >
-                                                        <EyeIcon className="h-5 w-5" />
-                                                    </Link>
-                                                    <Link
-                                                        href={route('deceased.edit', record.id)}
-                                                        className="text-green-600 hover:text-green-900 p-2 rounded-lg hover:bg-green-50 transition"
+                                                        href={`/deceased/${record.id}/edit`}
+                                                        className="flex items-center px-3 py-2 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition"
                                                         title="Edit"
                                                     >
-                                                        <PencilIcon className="h-5 w-5" />
+                                                        <PencilIcon className="h-4 w-4" />
                                                     </Link>
                                                     <button
                                                         onClick={() => handleDelete(record.id, record.fullname)}
-                                                        className="text-red-600 hover:text-red-900 p-2 rounded-lg hover:bg-red-50 transition"
+                                                        className="flex items-center px-3 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition"
                                                         title="Delete"
                                                     >
-                                                        <TrashIcon className="h-5 w-5" />
+                                                        <TrashIcon className="h-4 w-4" />
                                                     </button>
                                                 </div>
                                             </td>

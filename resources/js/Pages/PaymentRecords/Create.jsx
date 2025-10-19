@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, Link } from '@inertiajs/react';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
+import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 
 export default function Create({ deceasedRecords = [], selectedDeceased = null }) {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -31,13 +32,24 @@ export default function Create({ deceasedRecords = [], selectedDeceased = null }
             <div className="max-w-4xl mx-auto">
                 {/* Header */}
                 <div className="bg-gradient-to-r from-green-200 to-emerald-200 rounded-xl shadow-md p-6 mb-6">
-                    <h2 className="text-2xl font-bold text-gray-800">RECORD PAYMENT</h2>
-                    <p className="text-gray-600 mt-1">Process a new payment transaction</p>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h2 className="text-2xl font-bold text-gray-800">RECORD PAYMENT</h2>
+                            <p className="text-gray-600 mt-1">Process a new payment transaction</p>
+                        </div>
+                        <Link
+                            href="/payments"
+                            className="flex items-center px-4 py-2 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 transition shadow-lg"
+                        >
+                            <ArrowLeftIcon className="h-5 w-5 mr-2" />
+                            Back to Records
+                        </Link>
+                    </div>
                 </div>
 
                 {/* Form Card */}
                 <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl shadow-lg p-8">
-                    <div onSubmit={handleSubmit} component="form" className="space-y-6">
+                    <form onSubmit={handleSubmit} className="space-y-6">
                         {/* Deceased Information Section */}
                         <div className="bg-white rounded-lg p-6 shadow-sm">
                             <h3 className="text-lg font-semibold text-green-700 mb-4 border-b pb-2">
@@ -244,22 +256,21 @@ export default function Create({ deceasedRecords = [], selectedDeceased = null }
 
                         {/* Action Buttons */}
                         <div className="flex items-center justify-end space-x-4 pt-4">
-                            <button
-                                type="button"
-                                onClick={() => window.history.back()}
-                                className="flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-pink-700 transition shadow-lg"
+                            <Link
+                                href="/payments"
+                                className="px-6 py-3 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition"
                             >
                                 Cancel
-                            </button>
+                            </Link>
                             <button
-                                onClick={handleSubmit}
+                                type="submit"
                                 disabled={processing}
-                                className="flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-pink-700 transition shadow-lg"
+                                className="px-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition shadow-lg disabled:bg-green-400 disabled:cursor-not-allowed"
                             >
                                 {processing ? 'Recording Payment...' : 'Record Payment'}
                             </button>
                         </div>
-                    </div>
+                    </form>
                 </div>
             </div>
         </AuthenticatedLayout>

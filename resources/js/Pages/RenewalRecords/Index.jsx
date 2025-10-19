@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
-import { PencilIcon, EyeIcon, TrashIcon, MagnifyingGlassIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { PencilIcon, TrashIcon, MagnifyingGlassIcon, PlusIcon } from '@heroicons/react/24/outline';
 
 export default function Index({ renewals, filters }) {
     const [search, setSearch] = useState(filters.search || '');
@@ -148,20 +148,13 @@ export default function Index({ renewals, filters }) {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-center">
                                                 <div className="flex justify-center space-x-2">
-                                                    <Link
-                                                        href={route('renewals.show', renewal.id)}
-                                                        className="flex items-center px-3 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition"
-                                                        title="View"
-                                                    >
-                                                        <EyeIcon className="h-4 w-4" />
-                                                    </Link>
-                                                    <Link
-                                                        href={route('renewals.edit', renewal.id)}
-                                                        className="flex items-center px-3 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition"
+                                                    <button
+                                                        onClick={() => router.visit(route('renewals.edit', renewal.id))}
+                                                        className="flex items-center px-3 py-2 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition"
                                                         title="Edit"
                                                     >
                                                         <PencilIcon className="h-4 w-4" />
-                                                    </Link>
+                                                    </button>
                                                     <button
                                                         onClick={() => handleDelete(renewal.id, renewal.deceased_record.fullname)}
                                                         className="flex items-center px-3 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition"

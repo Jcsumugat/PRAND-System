@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
-import { PencilIcon, EyeIcon, TrashIcon, MagnifyingGlassIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { PencilIcon, TrashIcon, MagnifyingGlassIcon, PlusIcon } from '@heroicons/react/24/outline';
 
 export default function Index({ payments, filters }) {
     const [search, setSearch] = useState(filters.search || '');
@@ -56,7 +56,6 @@ export default function Index({ payments, filters }) {
                         <PlusIcon className="h-5 w-5 mr-2" />
                         Record Payment
                     </Link>
-
                 </div>
 
                 {/* Search and Filter */}
@@ -95,7 +94,7 @@ export default function Index({ payments, filters }) {
                         </select>
                         <button
                             type="submit"
-                            className="px-6 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition"
+                            className="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition"
                         >
                             Search
                         </button>
@@ -169,25 +168,18 @@ export default function Index({ payments, filters }) {
                                             <td className="px-6 py-4 whitespace-nowrap text-center">
                                                 <div className="flex justify-center space-x-2">
                                                     <Link
-                                                        href={route('payments.show', payment.id)}
-                                                        className="text-blue-600 hover:text-blue-900 p-2 rounded-lg hover:bg-blue-50"
-                                                        title="View"
-                                                    >
-                                                        <EyeIcon className="h-5 w-5" />
-                                                    </Link>
-                                                    <Link
-                                                        href={route('payments.edit', payment.id)}
-                                                        className="text-green-600 hover:text-green-900 p-2 rounded-lg hover:bg-green-50"
+                                                        href={`/payments/${payment.id}/edit`}
+                                                        className="flex items-center px-3 py-2 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition"
                                                         title="Edit"
                                                     >
-                                                        <PencilIcon className="h-5 w-5" />
+                                                        <PencilIcon className="h-4 w-4" />
                                                     </Link>
                                                     <button
                                                         onClick={() => handleDelete(payment.id, payment.receipt_number)}
-                                                        className="text-red-600 hover:text-red-900 p-2 rounded-lg hover:bg-red-50"
+                                                        className="flex items-center px-3 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition"
                                                         title="Delete"
                                                     >
-                                                        <TrashIcon className="h-5 w-5" />
+                                                        <TrashIcon className="h-4 w-4" />
                                                     </button>
                                                 </div>
                                             </td>

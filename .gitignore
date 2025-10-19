@@ -21,4 +21,5 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
-/public/build
+/public/build/*
+!/public/build/.gitkeep

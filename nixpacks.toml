@@ -4,18 +4,21 @@ nixPkgs = ['php82', 'nodejs-18_x']
 [phases.install]
 cmds = [
     'composer install --no-dev --optimize-autoloader',
-    'npm ci'
+    'npm ci --legacy-peer-deps'
 ]
 
 [phases.build]
 cmds = [
     'npm run build',
+    'echo "=== Checking build output ==="',
     'ls -lah public/build/',
-    'cat public/build/manifest.json || echo "Manifest not found"',
+    'echo "=== Manifest content ==="',
+    'cat public/build/manifest.json || echo "ERROR: Manifest not generated!"',
+    'echo "=== Caching config ==="',
     'php artisan config:cache',
-    'php artisan route:cache'
+    'php artisan route:cache',
+    'php artisan view:cache'
 ]
 
 [start]
 cmd = 'php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT'
-

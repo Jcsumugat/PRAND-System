@@ -1,3 +1,2 @@
 [deploy]
-startCommand = "echo '=== Checking for manifest ===' && ls -lah /app/public/build/ && cat /app/public/build/manifest.json && echo '=== Starting app ===' && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT"
-```
+startCommand = "ls -lah /app/public/build/ && cat /app/public/build/manifest.json && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT"

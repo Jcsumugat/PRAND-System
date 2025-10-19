@@ -13,14 +13,21 @@ class CreateAdminUser extends Command
 
     public function handle()
     {
-        $user = User::updateOrCreate(
-            ['email' => 'admin@prand.com'],
-            [
-                'name' => 'Admin User',
-                'password' => Hash::make('admin123'),
-                'email_verified_at' => now(),
-            ]
-        );
+        // Check if user already exists
+        $existingUser = User::where('email', 'admin@prand.com')->first();
+
+        if ($existingUser) {
+            $this->info("Admin user already exists!");
+            return 0;
+        }
+
+        // Create new user only if doesn't exist
+        $user = User::create([
+            'name' => 'Admin User',
+            'email' => 'admin@prand.com',
+            'password' => Hash::make('admin123'),
+            'email_verified_at' => now(),
+        ]);
 
         $this->info("Admin user created!");
         $this->info("Email: admin@prand.com");

@@ -7,6 +7,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Login - PRAND System</title>
     @vite(['resources/js/app.jsx'])
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 
 <body class="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">

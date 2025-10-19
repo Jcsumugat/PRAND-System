@@ -3,6 +3,7 @@ import laravel from 'laravel-vite-plugin';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig({
+    base: process.env.ASSET_URL || '/',
     plugins: [
         laravel({
             input: [
@@ -16,10 +17,6 @@ export default defineConfig({
     build: {
         manifest: true,
         outDir: 'public/build',
-        rollupOptions: {
-            output: {
-                manualChunks: undefined,
-            },
-        },
+        emptyOutDir: true,
     },
 });

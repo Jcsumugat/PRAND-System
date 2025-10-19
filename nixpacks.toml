@@ -10,13 +10,10 @@ cmds = [
 [phases.build]
 cmds = [
     'npm run build',
-    'echo "=== Build completed ==="',
-    'ls -la public/build/',
-    'cat public/build/manifest.json',
+    'ls -lah public/build/',
     'php artisan config:cache',
-    'php artisan route:cache',
-    'php artisan view:cache'
+    'php artisan route:cache'
 ]
 
 [start]
-cmd = 'php artisan config:clear && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT'
+cmd = 'php artisan view:clear && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT'

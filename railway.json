@@ -1,0 +1,26 @@
+{
+  "build": {
+    "builder": "NIXPACKS",
+    "nixpacksPlan": {
+      "phases": {
+        "install": {
+          "cmds": [
+            "composer install --no-dev --optimize-autoloader --no-interaction",
+            "npm ci"
+          ]
+        },
+        "build": {
+          "cmds": [
+            "npm run build",
+            "mkdir -p storage/framework/{sessions,views,cache,testing} storage/logs bootstrap/cache",
+            "chmod -R 775 storage bootstrap/cache"
+          ]
+        }
+      }
+    }
+  },
+  "deploy": {
+    "startCommand": "php artisan config:clear && php artisan view:clear && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT",
+    "restartPolicyType": "ON_FAILURE"
+  }
+}

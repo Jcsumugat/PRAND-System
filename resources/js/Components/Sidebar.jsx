@@ -1,5 +1,9 @@
 import { useState } from 'react';
+<<<<<<< HEAD
 import { Link, usePage, router } from '@inertiajs/react';
+=======
+import { Link, usePage } from '@inertiajs/react';
+>>>>>>> cdfd56bae800e159fbed1a88c69bdf6d878d53eb
 import {
     HomeIcon,
     UserPlusIcon,
@@ -8,14 +12,20 @@ import {
     ArrowPathIcon,
     BellIcon,
     MapIcon,
+<<<<<<< HEAD
     UsersIcon,
+=======
+>>>>>>> cdfd56bae800e159fbed1a88c69bdf6d878d53eb
     Bars3Icon,
     XMarkIcon
 } from '@heroicons/react/24/outline';
 
 export default function Sidebar() {
     const [isOpen, setIsOpen] = useState(false);
+<<<<<<< HEAD
     const [showLogoutModal, setShowLogoutModal] = useState(false);
+=======
+>>>>>>> cdfd56bae800e159fbed1a88c69bdf6d878d53eb
     const page = usePage();
     const { auth } = page.props;
 
@@ -29,6 +39,7 @@ export default function Sidebar() {
         { name: 'Payment Records', href: '/payments', component: 'PaymentRecords', icon: CreditCardIcon },
         { name: 'Renewal Records', href: '/renewals', component: 'RenewalRecords', icon: ArrowPathIcon },
         { name: 'Notice Distribution', href: '/notices', component: 'NoticeDistributions', icon: BellIcon },
+<<<<<<< HEAD
         { name: 'Employers', href: '/employers', component: 'Employers', icon: UsersIcon },
         { name: 'Map', href: '/map', component: 'Map', icon: MapIcon },
 
@@ -47,6 +58,11 @@ export default function Sidebar() {
         setShowLogoutModal(false);
     };
 
+=======
+        { name: 'Map', href: '/map', component: 'Map', icon: MapIcon },
+    ];
+
+>>>>>>> cdfd56bae800e159fbed1a88c69bdf6d878d53eb
     return (
         <>
             {/* Mobile hamburger button */}
@@ -71,8 +87,14 @@ export default function Sidebar() {
 
             {/* Sidebar */}
             <div
+<<<<<<< HEAD
                 className={`fixed top-0 left-0 h-screen bg-gradient-to-b from-pink-100 to-purple-100 shadow-2xl z-40 transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'
                     } lg:translate-x-0 lg:static lg:w-64`}
+=======
+                className={`fixed top-0 left-0 h-screen bg-gradient-to-b from-pink-100 to-purple-100 shadow-2xl z-40 transition-transform duration-300 ease-in-out ${
+                    isOpen ? 'translate-x-0' : '-translate-x-full'
+                } lg:translate-x-0 lg:static lg:w-64`}
+>>>>>>> cdfd56bae800e159fbed1a88c69bdf6d878d53eb
             >
                 <div className="flex flex-col h-full">
                     {/* Logo/Header */}
@@ -102,22 +124,39 @@ export default function Sidebar() {
                                 } else if (item.component === 'DeceasedRecords') {
                                     // Deceased Records: match DeceasedRecords but exclude Create
                                     isActive = currentRoute &&
+<<<<<<< HEAD
                                         currentRoute.startsWith('DeceasedRecords') &&
                                         currentRoute !== 'DeceasedRecords/Create';
                                 } else {
                                     // All other items: normal startsWith matching
                                     isActive = currentRoute === item.component ||
                                         (currentRoute && currentRoute.startsWith(item.component));
+=======
+                                              currentRoute.startsWith('DeceasedRecords') &&
+                                              currentRoute !== 'DeceasedRecords/Create';
+                                } else {
+                                    // All other items: normal startsWith matching
+                                    isActive = currentRoute === item.component ||
+                                              (currentRoute && currentRoute.startsWith(item.component));
+>>>>>>> cdfd56bae800e159fbed1a88c69bdf6d878d53eb
                                 }
 
                                 return (
                                     <Link
                                         key={item.name}
                                         href={item.href}
+<<<<<<< HEAD
                                         className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${isActive
                                             ? 'bg-purple-600 text-white shadow-lg'
                                             : 'text-gray-700 hover:bg-purple-200 hover:text-purple-900'
                                             }`}
+=======
+                                        className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+                                            isActive
+                                                ? 'bg-purple-600 text-white shadow-lg'
+                                                : 'text-gray-700 hover:bg-purple-200 hover:text-purple-900'
+                                        }`}
+>>>>>>> cdfd56bae800e159fbed1a88c69bdf6d878d53eb
                                         onClick={() => setIsOpen(false)}
                                     >
                                         <Icon className="h-5 w-5 mr-3" />
@@ -145,6 +184,7 @@ export default function Sidebar() {
                                 </p>
                             </div>
                         </div>
+<<<<<<< HEAD
                         <button
                             onClick={handleLogoutClick}
                             className="w-full px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-lg hover:bg-red-600 transition"
@@ -190,3 +230,19 @@ export default function Sidebar() {
         </>
     );
 }
+=======
+                        <Link
+                            href="/logout"
+                            method="post"
+                            as="button"
+                            className="w-full px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-lg hover:bg-red-600 transition"
+                        >
+                            Logout
+                        </Link>
+                    </div>
+                </div>
+            </div>
+        </>
+    );
+}
+>>>>>>> cdfd56bae800e159fbed1a88c69bdf6d878d53eb

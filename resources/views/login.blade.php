@@ -33,6 +33,7 @@
             <div class="bg-white rounded-2xl shadow-2xl p-8 backdrop-blur-sm">
                 <h2 class="text-2xl font-bold text-gray-800 mb-6">Welcome Back</h2>
 
+<<<<<<< HEAD
                 <!-- Success Message (Logout) -->
                 @if (session('message'))
                     <div class="mb-6 bg-green-50 border-l-4 border-green-500 p-4 rounded">
@@ -47,6 +48,8 @@
                     </div>
                 @endif
 
+=======
+>>>>>>> cdfd56bae800e159fbed1a88c69bdf6d878d53eb
                 <!-- Error Messages -->
                 @if ($errors->any())
                     <div class="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded">
@@ -129,6 +132,7 @@
                         </span>
                     </button>
                 </form>
+<<<<<<< HEAD
 
                 <!-- Register Link -->
                 <div class="mt-6 text-center">
@@ -139,6 +143,8 @@
                         </a>
                     </p>
                 </div>
+=======
+>>>>>>> cdfd56bae800e159fbed1a88c69bdf6d878d53eb
             </div>
 
             <br>
@@ -160,4 +166,8 @@
 
 </body>
 
+<<<<<<< HEAD
 </html>
+=======
+</html>
+>>>>>>> cdfd56bae800e159fbed1a88c69bdf6d878d53eb

@@ -3,14 +3,18 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+<<<<<<< HEAD
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+=======
+>>>>>>> cdfd56bae800e159fbed1a88c69bdf6d878d53eb
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DeceasedRecordController;
 use App\Http\Controllers\PaymentRecordController;
 use App\Http\Controllers\RenewalRecordController;
 use App\Http\Controllers\NoticeDistributionController;
 use App\Http\Controllers\MapController;
+<<<<<<< HEAD
 use App\Http\Controllers\EmployerController;
 use Inertia\Inertia;
 
@@ -66,16 +70,48 @@ Route::middleware('guest')->group(function () {
 });
 
 // Logout route - accessible to authenticated users
+=======
+
+Route::get('/', function () {
+    if (Auth::check()) {
+        return redirect('/dashboard');
+    }
+    return view('login');
+})->name('login');
+
+Route::post('/login', function (Request $request) {
+    $credentials = $request->validate([
+        'email' => 'required|email',
+        'password' => 'required',
+    ]);
+
+    if (Auth::attempt($credentials, $request->filled('remember'))) {
+        $request->session()->regenerate();
+        return redirect()->intended('/dashboard');
+    }
+
+    return back()->withErrors([
+        'email' => 'The provided credentials do not match our records.',
+    ])->onlyInput('email');
+});
+
+>>>>>>> cdfd56bae800e159fbed1a88c69bdf6d878d53eb
 Route::post('/logout', function (Request $request) {
     Auth::logout();
     $request->session()->invalidate();
     $request->session()->regenerateToken();
+<<<<<<< HEAD
 
     // Redirect to login with a proper response
     return redirect('/login')->with('message', 'You have been logged out successfully.');
 })->middleware('auth')->name('logout');
 
 // Authenticated routes
+=======
+    return redirect('/');
+})->name('logout');
+
+>>>>>>> cdfd56bae800e159fbed1a88c69bdf6d878d53eb
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
@@ -94,6 +130,9 @@ Route::middleware('auth')->group(function () {
 
     // Map
     Route::get('/map', [MapController::class, 'index'])->name('map.index');
+<<<<<<< HEAD
 
     Route::resource('employers', EmployerController::class);
+=======
+>>>>>>> cdfd56bae800e159fbed1a88c69bdf6d878d53eb
 });

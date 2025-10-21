@@ -8,7 +8,6 @@
     <title>Login - PRAND System</title>
     
     <style>
-        /* Prevent flash of unstyled content */
         body {
             opacity: 0;
             transition: opacity 0.2s ease-in;
@@ -18,14 +17,12 @@
             opacity: 1;
         }
         
-        /* Ensure SVG icons don't flash large before styles load */
         svg {
             max-width: 1.5rem;
             max-height: 1.5rem;
             display: inline-block;
         }
         
-        /* Specific sizing for different icon contexts */
         .icon-large svg {
             max-width: 2rem;
             max-height: 2rem;
@@ -35,6 +32,69 @@
             max-width: 1.25rem;
             max-height: 1.25rem;
         }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+
+        .glass-input {
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1.5px solid rgba(255, 255, 255, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .glass-input:focus {
+            background: rgba(255, 255, 255, 0.7);
+            border-color: rgba(99, 102, 241, 0.6);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        }
+
+        .gradient-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-size: 200% 200%;
+            animation: gradientShift 3s ease infinite;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .gradient-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .gradient-btn:hover::before {
+            left: 100%;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .float-animation {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .alert-glow {
+            box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+        }
+
+        .alert-glow-error {
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+        }
     </style>
     
     @vite(['resources/js/app.jsx'])
@@ -43,60 +103,60 @@
 
 <body class="relative min-h-screen bg-cover bg-center bg-no-repeat" style="background-image: url('/images/Municipal.jpg');">
     
-    <!-- Dark Overlay for better readability -->
-    <div class="absolute inset-0 bg-gradient-to-br from-black/50 via-indigo-900/40 to-purple-900/50"></div>
+    <div class="absolute inset-0 bg-gradient-to-br from-black/60 via-indigo-900/50 to-purple-900/60"></div>
 
     <div class="relative z-10 min-h-screen flex items-center justify-center px-4 py-12">
         <div class="max-w-md w-full">
 
-            <!-- Logo/Header -->
-            <div class="text-center mb-8">
-                <div class="inline-flex items-center justify-center w-20 h-20 bg-white rounded-2xl mb-4 shadow-lg overflow-hidden">
-                    <img src="/images/logo-no-bg.png" alt="Culasi Logo" class="w-full h-full object-cover">
+            <div class="glass-card rounded-3xl shadow-2xl p-8 transform hover:scale-[1.01] transition-all duration-300">
+                <div class="text-center mb-8">
+                    <div class="inline-flex items-center justify-center w-24 h-24 overflow-hidden float-animation mb-4">
+                        <img src="/images/logo-edited.png" alt="Culasi Logo" class="w-full h-full object-cover">
+                    </div>
+                    <p class="text-gray-700 text-sm font-medium">Cemetery Operations Management</p>
+                    <p class="text-xs text-gray-600 mt-1">Municipal Cemetery of Culasi</p>
                 </div>
-                <h1 class="text-4xl font-bold text-white mb-2 drop-shadow-lg">PRAND System</h1>
-                <p class="text-gray-100 drop-shadow">Cemetery Operations Management</p>
-                <p class="text-sm text-gray-200 mt-1 drop-shadow">Municipal Cemetery of Culasi</p>
-            </div>
 
-            <!-- Login Card -->
-            <div class="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl p-8">
-                <h2 class="text-2xl font-bold text-gray-800 mb-6">Welcome Back</h2>
+                <div class="mb-8">
+                    <h2 class="text-2xl font-bold text-gray-800">Sign In</h2>
+                    <p class="text-sm text-gray-600 mt-1">Enter your credentials to access the dashboard</p>
+                </div>
 
-                <!-- Success Message (Logout) -->
                 @if (session('message'))
-                    <div class="mb-6 bg-green-50 border-l-4 border-green-500 p-4 rounded">
-                        <div class="flex">
-                            <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd"
-                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                    clip-rule="evenodd" />
-                            </svg>
-                            <p class="text-sm text-green-700">{{ session('message') }}</p>
+                    <div class="mb-6 glass-input border-green-400 p-4 rounded-xl alert-glow">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd"
+                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <p class="ml-3 text-sm font-medium text-green-800">{{ session('message') }}</p>
                         </div>
                     </div>
                 @endif
 
-                <!-- Error Messages -->
                 @if ($errors->any())
-                    <div class="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded">
+                    <div class="mb-6 glass-input border-red-400 p-4 rounded-xl alert-glow-error">
                         <div class="flex">
-                            <svg class="w-5 h-5 text-red-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd"
-                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                                    clip-rule="evenodd" />
-                            </svg>
-                            <div>
+                            <div class="flex-shrink-0">
+                                <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd"
+                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <div class="ml-3">
                                 @foreach ($errors->all() as $error)
-                                    <p class="text-sm text-red-700">{{ $error }}</p>
+                                    <p class="text-sm font-medium text-red-800">{{ $error }}</p>
                                 @endforeach
                             </div>
                         </div>
                     </div>
                 @endif
 
-                <!-- Login Form -->
-                <form method="POST" action="/login" class="space-y-6">
+                <form method="POST" action="/login" class="space-y-5">
                     @csrf
 
                     <!-- Email Field -->
@@ -104,9 +164,9 @@
                         <label for="email" class="block text-sm font-semibold text-gray-700 mb-2">
                             Email Address
                         </label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none icon-small">
-                                <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor"
+                        <div class="relative group">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none icon-small">
+                                <svg class="h-5 w-5 text-indigo-500 group-focus-within:text-indigo-600 transition-colors" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
@@ -114,7 +174,7 @@
                             </div>
                             <input type="email" id="email" name="email" value="{{ old('email') }}" required
                                 autofocus
-                                class="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all outline-none @error('email') border-red-500 @enderror"
+                                class="glass-input w-full pl-12 pr-4 py-3.5 rounded-xl outline-none text-gray-800 font-medium placeholder-gray-500 @error('email') border-red-400 @enderror"
                                 placeholder="admin@prand.com">
                         </div>
                     </div>
@@ -124,34 +184,34 @@
                         <label for="password" class="block text-sm font-semibold text-gray-700 mb-2">
                             Password
                         </label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none icon-small">
-                                <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor"
+                        <div class="relative group">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none icon-small">
+                                <svg class="h-5 w-5 text-indigo-500 group-focus-within:text-indigo-600 transition-colors" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                                 </svg>
                             </div>
                             <input type="password" id="password" name="password" required
-                                class="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all outline-none"
+                                class="glass-input w-full pl-12 pr-4 py-3.5 rounded-xl outline-none text-gray-800 font-medium placeholder-gray-500"
                                 placeholder="••••••••••">
                         </div>
                     </div>
 
                     <!-- Remember Me -->
-                    <div class="flex items-center">
+                    <div class="flex items-center pt-2">
                         <input type="checkbox" id="remember" name="remember"
-                            class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 focus:ring-2">
-                        <label for="remember" class="ml-2 text-sm text-gray-700 select-none cursor-pointer">
+                            class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 focus:ring-2 cursor-pointer">
+                        <label for="remember" class="ml-2 text-sm text-gray-700 font-medium select-none cursor-pointer">
                             Remember me for 30 days
                         </label>
                     </div>
 
                     <!-- Submit Button -->
                     <button type="submit"
-                        class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold py-3.5 rounded-xl hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-4 focus:ring-indigo-200 transform hover:scale-[1.02] transition-all shadow-lg hover:shadow-xl">
-                        <span class="flex items-center justify-center icon-small">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        class="gradient-btn w-full text-white font-bold py-4 rounded-xl focus:outline-none focus:ring-4 focus:ring-purple-300 transform hover:scale-[1.02] transition-all shadow-xl hover:shadow-2xl mt-6">
+                        <span class="relative flex items-center justify-center icon-small">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                             </svg>
@@ -161,10 +221,10 @@
                 </form>
 
                 <!-- Register Link -->
-                <div class="mt-6 text-center">
+                <div class="mt-8 text-center">
                     <p class="text-sm text-gray-600">
                         Don't have an account? 
-                        <a href="/register" class="font-semibold text-indigo-600 hover:text-indigo-800 underline">
+                        <a href="/register" class="font-bold text-indigo-600 hover:text-purple-600 transition-colors underline decoration-2 underline-offset-2">
                             Create one here
                         </a>
                     </p>
@@ -172,12 +232,12 @@
             </div>
 
             <!-- Footer -->
-            <div class="text-center mt-6">
-                <p class="text-sm text-white drop-shadow-lg">
+            <div class="text-center mt-8">
+                <p class="text-sm text-white drop-shadow-lg font-medium">
                     Municipal Cemetery of Culasi, Antique
                 </p>
 
-                <p class="text-xs text-gray-200 mt-1 drop-shadow">
+                <p class="text-xs text-gray-200 mt-2 drop-shadow">
                     © 2025 PRAND System. All rights reserved.
                 </p>
             </div>
@@ -185,12 +245,9 @@
     </div>
 
     <script>
-        // Remove loading state after page fully loads
         window.addEventListener('load', function() {
             document.body.classList.add('loaded');
         });
-        
-        // Fallback: Show content after 300ms if load event hasn't fired
         setTimeout(function() {
             if (!document.body.classList.contains('loaded')) {
                 document.body.classList.add('loaded');

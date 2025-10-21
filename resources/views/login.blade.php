@@ -6,34 +6,63 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Login - PRAND System</title>
+    
+    <style>
+        /* Prevent flash of unstyled content */
+        body {
+            opacity: 0;
+            transition: opacity 0.2s ease-in;
+        }
+        
+        body.loaded {
+            opacity: 1;
+        }
+        
+        /* Ensure SVG icons don't flash large before styles load */
+        svg {
+            max-width: 1.5rem;
+            max-height: 1.5rem;
+            display: inline-block;
+        }
+        
+        /* Specific sizing for different icon contexts */
+        .icon-large svg {
+            max-width: 2rem;
+            max-height: 2rem;
+        }
+        
+        .icon-small svg {
+            max-width: 1.25rem;
+            max-height: 1.25rem;
+        }
+    </style>
+    
     @vite(['resources/js/app.jsx'])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 
-<body class="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+<body class="relative min-h-screen bg-cover bg-center bg-no-repeat" style="background-image: url('/images/Municipal.jpg');">
+    
+    <!-- Dark Overlay for better readability -->
+    <div class="absolute inset-0 bg-gradient-to-br from-black/50 via-indigo-900/40 to-purple-900/50"></div>
 
-    <div class="min-h-screen flex items-center justify-center px-4 py-12">
+    <div class="relative z-10 min-h-screen flex items-center justify-center px-4 py-12">
         <div class="max-w-md w-full">
 
             <!-- Logo/Header -->
             <div class="text-center mb-8">
-                <div
-                    class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl mb-4 shadow-lg">
-                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
+                <div class="inline-flex items-center justify-center w-20 h-20 bg-white rounded-2xl mb-4 shadow-lg overflow-hidden">
+                    <img src="/images/logo-no-bg.png" alt="Culasi Logo" class="w-full h-full object-cover">
                 </div>
-                <h1 class="text-4xl font-bold text-gray-900 mb-2">PRAND System</h1>
-                <p class="text-gray-600">Cemetery Operations Management</p>
-                <p class="text-sm text-gray-500 mt-1">Municipal Cemetery of Culasi</p>
+                <h1 class="text-4xl font-bold text-white mb-2 drop-shadow-lg">PRAND System</h1>
+                <p class="text-gray-100 drop-shadow">Cemetery Operations Management</p>
+                <p class="text-sm text-gray-200 mt-1 drop-shadow">Municipal Cemetery of Culasi</p>
             </div>
 
             <!-- Login Card -->
-            <div class="bg-white rounded-2xl shadow-2xl p-8 backdrop-blur-sm">
+            <div class="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl p-8">
                 <h2 class="text-2xl font-bold text-gray-800 mb-6">Welcome Back</h2>
 
-<<<<<<< HEAD
                 <!-- Success Message (Logout) -->
                 @if (session('message'))
                     <div class="mb-6 bg-green-50 border-l-4 border-green-500 p-4 rounded">
@@ -48,8 +77,6 @@
                     </div>
                 @endif
 
-=======
->>>>>>> cdfd56bae800e159fbed1a88c69bdf6d878d53eb
                 <!-- Error Messages -->
                 @if ($errors->any())
                     <div class="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded">
@@ -78,7 +105,7 @@
                             Email Address
                         </label>
                         <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none icon-small">
                                 <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -98,7 +125,7 @@
                             Password
                         </label>
                         <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none icon-small">
                                 <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -123,7 +150,7 @@
                     <!-- Submit Button -->
                     <button type="submit"
                         class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold py-3.5 rounded-xl hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-4 focus:ring-indigo-200 transform hover:scale-[1.02] transition-all shadow-lg hover:shadow-xl">
-                        <span class="flex items-center justify-center">
+                        <span class="flex items-center justify-center icon-small">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
@@ -132,7 +159,6 @@
                         </span>
                     </button>
                 </form>
-<<<<<<< HEAD
 
                 <!-- Register Link -->
                 <div class="mt-6 text-center">
@@ -143,31 +169,35 @@
                         </a>
                     </p>
                 </div>
-=======
->>>>>>> cdfd56bae800e159fbed1a88c69bdf6d878d53eb
             </div>
-
-            <br>
-            <br>
-            <br>
 
             <!-- Footer -->
             <div class="text-center mt-6">
-                <p class="text-sm text-gray-600">
+                <p class="text-sm text-white drop-shadow-lg">
                     Municipal Cemetery of Culasi, Antique
                 </p>
 
-                <p class="text-xs text-gray-500 mt-1">
+                <p class="text-xs text-gray-200 mt-1 drop-shadow">
                     © 2025 PRAND System. All rights reserved.
                 </p>
             </div>
         </div>
     </div>
 
+    <script>
+        // Remove loading state after page fully loads
+        window.addEventListener('load', function() {
+            document.body.classList.add('loaded');
+        });
+        
+        // Fallback: Show content after 300ms if load event hasn't fired
+        setTimeout(function() {
+            if (!document.body.classList.contains('loaded')) {
+                document.body.classList.add('loaded');
+            }
+        }, 300);
+    </script>
+
 </body>
 
-<<<<<<< HEAD
 </html>
-=======
-</html>
->>>>>>> cdfd56bae800e159fbed1a88c69bdf6d878d53eb

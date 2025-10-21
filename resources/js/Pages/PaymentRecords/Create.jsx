@@ -13,7 +13,7 @@ export default function Create({ deceasedRecords = [], selectedDeceased = null }
         amount: '',
         payment_date: new Date().toISOString().split('T')[0],
         payment_type: 'initial',
-        payment_method: 'cash',
+        payment_method: 'cash', // Fixed to cash only
         official_receipt_number: '',
         remarks: '',
     });
@@ -169,21 +169,16 @@ export default function Create({ deceasedRecords = [], selectedDeceased = null }
                                     <InputError message={errors.payment_type} className="mt-2" />
                                 </div>
 
-                                {/* Payment Method */}
+                                {/* Payment Method - Cash Only (Read-only) */}
                                 <div>
                                     <InputLabel htmlFor="payment_method" value="Payment Method *" className="text-gray-700 font-semibold" />
-                                    <select
-                                        id="payment_method"
-                                        value={data.payment_method}
-                                        className="mt-1 block w-full bg-green-50 border border-green-200 rounded-md shadow-sm focus:border-green-500 focus:ring-green-500 px-3 py-2"
-                                        onChange={(e) => setData('payment_method', e.target.value)}
-                                        required
-                                    >
-                                        <option value="cash">Cash</option>
-                                        <option value="gcash">GCash</option>
-                                        <option value="bank_transfer">Bank Transfer</option>
-                                        <option value="check">Check</option>
-                                    </select>
+                                    <div className="mt-1 block w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm px-3 py-2">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-gray-900 font-medium">Cash</span>
+                                            <span className="text-xs text-gray-500 italic">(Walk-in only)</span>
+                                        </div>
+                                    </div>
+                                    <p className="mt-1 text-xs text-gray-600">All payments must be made in person at the municipal office</p>
                                     <InputError message={errors.payment_method} className="mt-2" />
                                 </div>
 
@@ -235,11 +230,7 @@ export default function Create({ deceasedRecords = [], selectedDeceased = null }
                                 </div>
                                 <div>
                                     <p className="text-xs text-green-700 font-semibold uppercase">Method</p>
-                                    <p className="text-sm font-bold text-green-900 mt-1 capitalize">
-                                        {data.payment_method === 'gcash' ? 'GCash' :
-                                            data.payment_method === 'bank_transfer' ? 'Bank Transfer' :
-                                                data.payment_method}
-                                    </p>
+                                    <p className="text-sm font-bold text-green-900 mt-1">Cash</p>
                                 </div>
                                 <div>
                                     <p className="text-xs text-green-700 font-semibold uppercase">Date</p>

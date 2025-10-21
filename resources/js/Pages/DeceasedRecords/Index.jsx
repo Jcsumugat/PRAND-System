@@ -1,21 +1,14 @@
 import { useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
-<<<<<<< HEAD
 import { PencilIcon, TrashIcon, MagnifyingGlassIcon, EyeIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
-=======
-import { PencilIcon, TrashIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
->>>>>>> cdfd56bae800e159fbed1a88c69bdf6d878d53eb
 
 export default function Index({ deceased, filters }) {
     const [search, setSearch] = useState(filters.search || '');
     const [status, setStatus] = useState(filters.status || '');
-<<<<<<< HEAD
     const [viewModal, setViewModal] = useState(false);
     const [selectedRecord, setSelectedRecord] = useState(null);
-=======
->>>>>>> cdfd56bae800e159fbed1a88c69bdf6d878d53eb
 
     const handleSearch = (e) => {
         e.preventDefault();
@@ -28,7 +21,6 @@ export default function Index({ deceased, filters }) {
         }
     };
 
-<<<<<<< HEAD
     const handleView = (record) => {
         setSelectedRecord(record);
         setViewModal(true);
@@ -39,8 +31,6 @@ export default function Index({ deceased, filters }) {
         setSelectedRecord(null);
     };
 
-=======
->>>>>>> cdfd56bae800e159fbed1a88c69bdf6d878d53eb
     const getStatusBadge = (status) => {
         const badges = {
             paid: 'bg-green-100 text-green-800',
@@ -175,7 +165,6 @@ export default function Index({ deceased, filters }) {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                                                 <div className="flex justify-center space-x-2">
-<<<<<<< HEAD
                                                     <button
                                                         onClick={() => handleView(record)}
                                                         className="flex items-center px-3 py-2 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 transition"
@@ -185,10 +174,6 @@ export default function Index({ deceased, filters }) {
                                                     </button>
                                                     <Link
                                                         href={route('deceased.edit', record.id)}
-=======
-                                                    <Link
-                                                        href={`/deceased/${record.id}/edit`}
->>>>>>> cdfd56bae800e159fbed1a88c69bdf6d878d53eb
                                                         className="flex items-center px-3 py-2 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition"
                                                         title="Edit"
                                                     >
@@ -253,7 +238,6 @@ export default function Index({ deceased, filters }) {
                     )}
                 </div>
             </div>
-<<<<<<< HEAD
 
             {/* View Details Modal */}
             {viewModal && selectedRecord && (
@@ -402,8 +386,3 @@ export default function Index({ deceased, filters }) {
         </AuthenticatedLayout>
     );
 }
-=======
-        </AuthenticatedLayout>
-    );
-}
->>>>>>> cdfd56bae800e159fbed1a88c69bdf6d878d53eb

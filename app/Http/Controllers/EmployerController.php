@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
+use Illuminate\Validation\ValidationException;
 
 class EmployerController extends Controller
 {
@@ -64,6 +65,28 @@ class EmployerController extends Controller
     }
 
     /**
+     * Verify employer password before allowing edit/delete
+     */
+    public function verifyPassword(Request $request, User $employer)
+    {
+        $validated = $request->validate([
+            'password' => 'required|string',
+        ]);
+
+        if (!Hash::check($validated['password'], $employer->password)) {
+            return response()->json([
+                'verified' => false,
+                'message' => 'The provided password is incorrect.'
+            ], 422);
+        }
+
+        return response()->json([
+            'verified' => true,
+            'message' => 'Password verified successfully.'
+        ]);
+    }
+
+    /**
      * Show the form for editing the specified employer.
      */
     public function edit(User $employer)
@@ -78,6 +101,17 @@ class EmployerController extends Controller
      */
     public function update(Request $request, User $employer)
     {
+        // Verify account password first
+        $request->validate([
+            'account_password' => 'required|string',
+        ]);
+
+        if (!Hash::check($request->account_password, $employer->password)) {
+            throw ValidationException::withMessages([
+                'account_password' => ['The account password is incorrect.'],
+            ]);
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $employer->id,
@@ -102,8 +136,19 @@ class EmployerController extends Controller
     /**
      * Remove the specified employer from storage.
      */
-    public function destroy(User $employer)
+    public function destroy(Request $request, User $employer)
     {
+        // Verify account password first
+        $request->validate([
+            'password' => 'required|string',
+        ]);
+
+        if (!Hash::check($request->password, $employer->password)) {
+            throw ValidationException::withMessages([
+                'password' => ['The account password is incorrect.'],
+            ]);
+        }
+
         $employer->delete();
 
         return redirect()->route('employers.index')

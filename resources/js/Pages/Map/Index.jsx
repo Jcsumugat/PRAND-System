@@ -78,7 +78,7 @@ export default function CemeteryMap({ deceased = [] }) {
             {/* Header */}
             <div className="bg-gradient-to-r from-amber-200 to-orange-200 rounded-xl shadow-md p-6">
                 <h2 className="text-2xl font-bold text-gray-800">
-                    CEMETERY MAP
+                    CEMETERY INFORMATION
                 </h2>
                 <p className="text-gray-600 mt-1">
                     Interactive cemetery layout - {deceased.length} tombs total
@@ -369,7 +369,7 @@ export default function CemeteryMap({ deceased = [] }) {
                                     {/* Next of Kin */}
                                     <div>
                                         <p className="text-xs text-gray-600 font-semibold uppercase">
-                                            Next of Kin
+                                            Payor
                                         </p>
                                         <p className="text-gray-900 font-medium mt-1">
                                             {selectedTomb.next_of_kin_name}

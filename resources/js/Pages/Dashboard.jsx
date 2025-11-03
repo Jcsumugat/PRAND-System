@@ -140,7 +140,7 @@ export default function Dashboard({ stats = {}, monthlyStats = [], trendData = [
 
                 {/* Line Chart */}
                 <div className="bg-white rounded-xl shadow-md p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">New Records Trend (2025)</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">New Records (2025)</h3>
                     <ResponsiveContainer width="100%" height={300}>
                         <LineChart data={lineChartData}>
                             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />

@@ -106,7 +106,7 @@ export default function Index({ deceased, filters }) {
                             <thead className="bg-gradient-to-r from-pink-200 to-purple-200">
                                 <tr>
                                     <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                                        Deceased Name / Next of Kin
+                                        Payor
                                     </th>
                                     <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                                         Birthday
@@ -314,10 +314,10 @@ export default function Index({ deceased, filters }) {
                                 </div>
                             </div>
 
-                            {/* Next of Kin Information */}
+                            {/* Payor */}
                             <div>
                                 <h4 className="text-lg font-bold text-gray-900 mb-4 border-b-2 border-purple-200 pb-2">
-                                    Next of Kin Information
+                                    Payor
                                 </h4>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>

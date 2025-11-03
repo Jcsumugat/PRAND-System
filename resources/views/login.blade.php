@@ -6,28 +6,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Login - PRAND System</title>
-    
+
     <style>
         body {
             opacity: 0;
             transition: opacity 0.2s ease-in;
         }
-        
+
         body.loaded {
             opacity: 1;
         }
-        
+
         svg {
             max-width: 1.5rem;
             max-height: 1.5rem;
             display: inline-block;
         }
-        
+
         .icon-large svg {
             max-width: 2rem;
             max-height: 2rem;
         }
-        
+
         .icon-small svg {
             max-width: 1.25rem;
             max-height: 1.25rem;
@@ -79,9 +79,17 @@
         }
 
         @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
         }
 
         .float-animation {
@@ -96,13 +104,24 @@
             box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
         }
     </style>
-    
+
     @vite(['resources/js/app.jsx'])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 
-<body class="relative min-h-screen bg-cover bg-center bg-no-repeat" style="background-image: url('/images/Municipal.jpg');">
-    
+<body class="relative min-h-screen bg-cover bg-center bg-no-repeat"
+    style="background-image: url('/images/Municipal.jpg');">
+<?php
+$hash = '$2y$12$fP.Fa8z/E86916.ydftsaefaL3qIZRE.46d1RKimbotgIsyIvWh1y';
+
+if (password_verify('password', $hash)) {
+    echo 'Password matches!';
+} else {
+    echo 'Invalid password.';
+}
+?>
+
+
     <div class="absolute inset-0 bg-gradient-to-br from-black/60 via-indigo-900/50 to-purple-900/60"></div>
 
     <div class="relative z-10 min-h-screen flex items-center justify-center px-4 py-12">
@@ -165,9 +184,10 @@
                             Email Address
                         </label>
                         <div class="relative group">
-                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none icon-small">
-                                <svg class="h-5 w-5 text-indigo-500 group-focus-within:text-indigo-600 transition-colors" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
+                            <div
+                                class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none icon-small">
+                                <svg class="h-5 w-5 text-indigo-500 group-focus-within:text-indigo-600 transition-colors"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
                                 </svg>
@@ -185,9 +205,10 @@
                             Password
                         </label>
                         <div class="relative group">
-                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none icon-small">
-                                <svg class="h-5 w-5 text-indigo-500 group-focus-within:text-indigo-600 transition-colors" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
+                            <div
+                                class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none icon-small">
+                                <svg class="h-5 w-5 text-indigo-500 group-focus-within:text-indigo-600 transition-colors"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                                 </svg>
@@ -223,8 +244,9 @@
                 <!-- Register Link -->
                 <div class="mt-8 text-center">
                     <p class="text-sm text-gray-600">
-                        Don't have an account? 
-                        <a href="/register" class="font-bold text-indigo-600 hover:text-purple-600 transition-colors underline decoration-2 underline-offset-2">
+                        Don't have an account?
+                        <a href="/register"
+                            class="font-bold text-indigo-600 hover:text-purple-600 transition-colors underline decoration-2 underline-offset-2">
                             Create one here
                         </a>
                     </p>

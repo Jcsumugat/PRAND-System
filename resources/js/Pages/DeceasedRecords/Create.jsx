@@ -214,7 +214,7 @@ export default function Create() {
                         {/* Next of Kin Information Section */}
                         <div className="bg-white rounded-lg p-6 shadow-sm">
                             <h3 className="text-lg font-semibold text-purple-700 mb-4 border-b pb-2">
-                                NEXT OF KIN INFORMATION
+                                Payor
                             </h3>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -222,7 +222,7 @@ export default function Create() {
                                 <div>
                                     <InputLabel
                                         htmlFor="next_of_kin_name"
-                                        value="Next of Kin Name *"
+                                        value="Payor Name *"
                                         className="text-gray-700 font-semibold"
                                     />
                                     <TextInput
@@ -337,7 +337,7 @@ export default function Create() {
                                 <div className="md:col-span-2">
                                     <InputLabel
                                         htmlFor="address"
-                                        value="Address (Optional)"
+                                        value="Address"
                                         className="text-gray-700 font-semibold"
                                     />
                                     <textarea

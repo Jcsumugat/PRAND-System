@@ -5,7 +5,7 @@ import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
-import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon, MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
 export default function Create({ deceasedRecords = [], selectedDeceased = null }) {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -13,15 +13,47 @@ export default function Create({ deceasedRecords = [], selectedDeceased = null }
         amount: '',
         payment_date: new Date().toISOString().split('T')[0],
         payment_type: 'initial',
-        payment_method: 'cash', // Fixed to cash only
+        payment_method: 'cash',
         official_receipt_number: '',
         remarks: '',
     });
 
+    const [searchQuery, setSearchQuery] = useState('');
+    const [showDropdown, setShowDropdown] = useState(false);
+    const [selectedRecord, setSelectedRecord] = useState(selectedDeceased);
+
+    // Filter deceased records based on search query
+    const filteredRecords = deceasedRecords.filter(record => {
+        const searchLower = searchQuery.toLowerCase();
+        return (
+            record.fullname.toLowerCase().includes(searchLower) ||
+            record.tomb_number.toLowerCase().includes(searchLower) ||
+            record.payment_status.toLowerCase().includes(searchLower)
+        );
+    });
+
+    const handleSelectRecord = (record) => {
+        setSelectedRecord(record);
+        setData('deceased_record_id', record.id);
+        setSearchQuery(record.fullname);
+        setShowDropdown(false);
+    };
+
+    const handleClearSelection = () => {
+        setSelectedRecord(null);
+        setData('deceased_record_id', '');
+        setSearchQuery('');
+        setShowDropdown(false);
+    };
+
     const handleSubmit = (e) => {
         e.preventDefault();
         post(route('payments.store'), {
-            onSuccess: () => reset(),
+            onSuccess: () => {
+                reset();
+                setSelectedRecord(null);
+                setSearchQuery('');
+            },
         });
     };
 
@@ -57,57 +89,122 @@ export default function Create({ deceasedRecords = [], selectedDeceased = null }
                             </h3>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {/* Deceased Record Selection */}
+                                {/* Deceased Record Search */}
                                 <div className="md:col-span-2">
-                                    <InputLabel htmlFor="deceased_record_id" value="Select Deceased *" className="text-gray-700 font-semibold" />
-                                    <select
-                                        id="deceased_record_id"
-                                        value={data.deceased_record_id}
-                                        className="mt-1 block w-full bg-green-50 border border-green-200 rounded-md shadow-sm focus:border-green-500 focus:ring-green-500 px-3 py-2"
-                                        onChange={(e) => setData('deceased_record_id', e.target.value)}
-                                        required
-                                    >
-                                        <option value="">-- Choose a deceased record --</option>
-                                        {deceasedRecords.map((record) => (
-                                            <option key={record.id} value={record.id}>
-                                                {record.fullname} (Tomb: {record.tomb_number}) - Status: {record.payment_status}
-                                            </option>
-                                        ))}
-                                    </select>
+                                    <InputLabel htmlFor="deceased_search" value="Search Deceased *" className="text-gray-700 font-semibold" />
+                                    <div className="relative mt-1">
+                                        <div className="relative">
+                                            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                                            <input
+                                                id="deceased_search"
+                                                type="text"
+                                                value={searchQuery}
+                                                onChange={(e) => {
+                                                    setSearchQuery(e.target.value);
+                                                    setShowDropdown(true);
+                                                }}
+                                                onFocus={() => setShowDropdown(true)}
+                                                className="block w-full pl-10 pr-10 py-2 bg-green-50 border border-green-200 rounded-md shadow-sm focus:border-green-500 focus:ring-green-500"
+                                                placeholder="Search by name, tomb number, or status..."
+                                                autoComplete="off"
+                                            />
+                                            {searchQuery && (
+                                                <button
+                                                    type="button"
+                                                    onClick={handleClearSelection}
+                                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                                >
+                                                    <XMarkIcon className="h-5 w-5" />
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        {/* Dropdown Results */}
+                                        {showDropdown && searchQuery && (
+                                            <div className="absolute z-10 w-full mt-1 bg-white border border-green-200 rounded-md shadow-lg max-h-60 overflow-auto">
+                                                {filteredRecords.length > 0 ? (
+                                                    filteredRecords.map((record) => (
+                                                        <button
+                                                            key={record.id}
+                                                            type="button"
+                                                            onClick={() => handleSelectRecord(record)}
+                                                            className="w-full text-left px-4 py-3 hover:bg-green-50 border-b border-gray-100 last:border-b-0 transition"
+                                                        >
+                                                            <div className="flex items-center justify-between">
+                                                                <div>
+                                                                    <p className="font-semibold text-gray-900">{record.fullname}</p>
+                                                                    <p className="text-sm text-gray-600">Tomb: {record.tomb_number}</p>
+                                                                </div>
+                                                                <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                                                                    record.payment_status === 'paid' ? 'bg-green-100 text-green-800' :
+                                                                    record.payment_status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                                                    'bg-red-100 text-red-800'
+                                                                }`}>
+                                                                    {record.payment_status}
+                                                                </span>
+                                                            </div>
+                                                        </button>
+                                                    ))
+                                                ) : (
+                                                    <div className="px-4 py-3 text-gray-500 text-center">
+                                                        No records found
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
                                     <InputError message={errors.deceased_record_id} className="mt-2" />
+                                    <p className="mt-1 text-xs text-gray-600">
+                                        Start typing to search for deceased records
+                                    </p>
                                 </div>
 
                                 {/* Display Selected Deceased Info */}
-                                {selectedDeceased && (
+                                {selectedRecord && (
                                     <>
-                                        <div>
-                                            <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                                Deceased Name
-                                            </label>
-                                            <p className="text-gray-900 font-medium">{selectedDeceased.fullname}</p>
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                                Tomb Number
-                                            </label>
-                                            <p className="text-gray-900 font-medium">{selectedDeceased.tomb_number}</p>
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                                Tomb Location
-                                            </label>
-                                            <p className="text-gray-900 font-medium">{selectedDeceased.tomb_location}</p>
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                                Payment Status
-                                            </label>
-                                            <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${selectedDeceased.payment_status === 'paid' ? 'bg-green-100 text-green-800' :
-                                                selectedDeceased.payment_status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                                    'bg-red-100 text-red-800'
-                                                }`}>
-                                                {selectedDeceased.payment_status.charAt(0).toUpperCase() + selectedDeceased.payment_status.slice(1)}
-                                            </span>
+                                        <div className="md:col-span-2 bg-green-50 border-2 border-green-200 rounded-lg p-4">
+                                            <div className="flex items-center justify-between mb-3">
+                                                <h4 className="text-sm font-semibold text-green-800 uppercase">Selected Record</h4>
+                                                <button
+                                                    type="button"
+                                                    onClick={handleClearSelection}
+                                                    className="text-xs text-red-600 hover:text-red-800 font-semibold"
+                                                >
+                                                    Clear Selection
+                                                </button>
+                                            </div>
+                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                                <div>
+                                                    <label className="block text-xs font-semibold text-gray-600 mb-1">
+                                                        Deceased Name
+                                                    </label>
+                                                    <p className="text-sm text-gray-900 font-medium">{selectedRecord.fullname}</p>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-semibold text-gray-600 mb-1">
+                                                        Tomb Number
+                                                    </label>
+                                                    <p className="text-sm text-gray-900 font-medium">{selectedRecord.tomb_number}</p>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-semibold text-gray-600 mb-1">
+                                                        Tomb Location
+                                                    </label>
+                                                    <p className="text-sm text-gray-900 font-medium">{selectedRecord.tomb_location}</p>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-semibold text-gray-600 mb-1">
+                                                        Payment Status
+                                                    </label>
+                                                    <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                                        selectedRecord.payment_status === 'paid' ? 'bg-green-100 text-green-800' :
+                                                        selectedRecord.payment_status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                                        'bg-red-100 text-red-800'
+                                                    }`}>
+                                                        {selectedRecord.payment_status.charAt(0).toUpperCase() + selectedRecord.payment_status.slice(1)}
+                                                    </span>
+                                                </div>
+                                            </div>
                                         </div>
                                     </>
                                 )}
@@ -255,7 +352,7 @@ export default function Create({ deceasedRecords = [], selectedDeceased = null }
                             </Link>
                             <button
                                 type="submit"
-                                disabled={processing}
+                                disabled={processing || !selectedRecord}
                                 className="px-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition shadow-lg disabled:bg-green-400 disabled:cursor-not-allowed"
                             >
                                 {processing ? 'Recording Payment...' : 'Record Payment'}

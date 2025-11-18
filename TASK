@@ -5,6 +5,8 @@ Type - Initial
 Remove renewal record only display Initial payments
 remove type and payment method in the table
 
+Fix to put the Amount and Duration
+
 📍Renewal UI 
 Type - Renewal
 Autofill Next Renewal Date to 5 years

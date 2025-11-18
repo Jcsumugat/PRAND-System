@@ -1,8 +1,8 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-export default function Dashboard({ stats = {}, monthlyStats = [], trendData = [] }) {
+export default function Dashboard({ stats = {}, trendData = [] }) {
     const {
         totalRecords = 0,
         paidThisMonth = 0,
@@ -10,17 +10,8 @@ export default function Dashboard({ stats = {}, monthlyStats = [], trendData = [
         overduePayments = 0
     } = stats;
 
-    // Transform monthly stats data for bar chart
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const barChartData = monthNames.map((name, index) => {
-        const monthData = monthlyStats.find(stat => stat.month === index + 1);
-        return {
-            name,
-            deaths: monthData ? monthData.count : 0
-        };
-    });
-
     // Transform trend data for line chart
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const lineChartData = monthNames.map((name, index) => {
         const monthData = trendData.find(stat => stat.month === index + 1);
         return {
@@ -102,78 +93,41 @@ export default function Dashboard({ stats = {}, monthlyStats = [], trendData = [
                 </div>
             </div>
 
-            {/* Charts Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Bar Chart */}
-                <div className="bg-white rounded-xl shadow-md p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Deaths by Month (2025)</h3>
-                    <ResponsiveContainer width="100%" height={300}>
-                        <BarChart data={barChartData}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                            <XAxis
-                                dataKey="name"
-                                stroke="#6b7280"
-                                style={{ fontSize: '12px' }}
-                            />
-                            <YAxis
-                                stroke="#6b7280"
-                                style={{ fontSize: '12px' }}
-                            />
-                            <Tooltip
-                                contentStyle={{
-                                    backgroundColor: '#ffffff',
-                                    border: '1px solid #e5e7eb',
-                                    borderRadius: '8px',
-                                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                                }}
-                            />
-                            <Legend />
-                            <Bar
-                                dataKey="deaths"
-                                fill="#8b5cf6"
-                                radius={[8, 8, 0, 0]}
-                                name="Deaths"
-                            />
-                        </BarChart>
-                    </ResponsiveContainer>
-                </div>
-
-                {/* Line Chart */}
-                <div className="bg-white rounded-xl shadow-md p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">New Records (2025)</h3>
-                    <ResponsiveContainer width="100%" height={300}>
-                        <LineChart data={lineChartData}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                            <XAxis
-                                dataKey="name"
-                                stroke="#6b7280"
-                                style={{ fontSize: '12px' }}
-                            />
-                            <YAxis
-                                stroke="#6b7280"
-                                style={{ fontSize: '12px' }}
-                            />
-                            <Tooltip
-                                contentStyle={{
-                                    backgroundColor: '#ffffff',
-                                    border: '1px solid #e5e7eb',
-                                    borderRadius: '8px',
-                                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                                }}
-                            />
-                            <Legend />
-                            <Line
-                                type="monotone"
-                                dataKey="records"
-                                stroke="#ec4899"
-                                strokeWidth={3}
-                                dot={{ fill: '#ec4899', r: 5 }}
-                                activeDot={{ r: 7 }}
-                                name="New Records"
-                            />
-                        </LineChart>
-                    </ResponsiveContainer>
-                </div>
+            {/* Line Chart - Full Width */}
+            <div className="bg-white rounded-xl shadow-md p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">New Records (2025)</h3>
+                <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={lineChartData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <XAxis
+                            dataKey="name"
+                            stroke="#6b7280"
+                            style={{ fontSize: '12px' }}
+                        />
+                        <YAxis
+                            stroke="#6b7280"
+                            style={{ fontSize: '12px' }}
+                        />
+                        <Tooltip
+                            contentStyle={{
+                                backgroundColor: '#ffffff',
+                                border: '1px solid #e5e7eb',
+                                borderRadius: '8px',
+                                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                            }}
+                        />
+                        <Legend />
+                        <Line
+                            type="monotone"
+                            dataKey="records"
+                            stroke="#ec4899"
+                            strokeWidth={3}
+                            dot={{ fill: '#ec4899', r: 5 }}
+                            activeDot={{ r: 7 }}
+                            name="New Records"
+                        />
+                    </LineChart>
+                </ResponsiveContainer>
             </div>
         </AuthenticatedLayout>
     );

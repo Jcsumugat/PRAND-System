@@ -151,9 +151,6 @@ export default function Index({ payments, filters }) {
                                         Type
                                     </th>
                                     <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase">
-                                        Method
-                                    </th>
-                                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase">
                                         Received By
                                     </th>
                                     <th className="px-6 py-4 text-center text-xs font-bold text-gray-700 uppercase">
@@ -215,26 +212,6 @@ export default function Index({ payments, filters }) {
                                                         payment.payment_type.slice(
                                                             1
                                                         )}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <span
-                                                    className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getMethodBadge(
-                                                        payment.payment_method
-                                                    )}`}
-                                                >
-                                                    {payment.payment_method ===
-                                                    "gcash"
-                                                        ? "GCash"
-                                                        : payment.payment_method ===
-                                                          "bank_transfer"
-                                                        ? "Bank Transfer"
-                                                        : payment.payment_method
-                                                              .charAt(0)
-                                                              .toUpperCase() +
-                                                          payment.payment_method.slice(
-                                                              1
-                                                          )}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">

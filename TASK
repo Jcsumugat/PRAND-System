@@ -1,0 +1,40 @@
+/**
+
+📍Payment UI
+Type - Initial
+Remove renewal record only display Initial payments
+remove type and payment method in the table
+
+📍Renewal UI 
+Type - Renewal
+Autofill Next Renewal Date to 5 years
+
+
+📍Registration 
+- Ang tomb number himuon nga primary key, kag kung na enter dun ang number dapat may ma guwa nga unavailable dun. 
+- Ang "Next to Kin" islan ka " Payor".
+- Ang Address kinanglan gd e fill out, hukson Ang name nga optional
+
+📍Payment Records 
+- Imbes drop-down, e islan ka search ang "Select Deceased".
+-Once paid dun ang status dapat ma dura dun tana sa Payment Records kag sa Renewal Records tana Makita dun.
+
+📍Renewal Records
+ - same mn sa Payment Records ang drop-down e change, himuon nga search
+
+📍 Employer 
+- e hukson lmng Ang iba nga acc kag e share password lng ka admin Incase mag absent tana.
+- Butangan ka "Forgot Password"
+- Change Ang "Employer" to "User"
+
+📍Notice Distribution
+- Islan Ang name nga "Notice Distribution" to " Notice of Distribution"
+
+📍Map
+- Ibahon Ang word nga "Map" 
+
+📍Dashboard
+- Hukson lmng Ang line graph kag Bar Chart
+
+📍20 Days before renewal dapat ma notif sa system nga rapit lmng ang renewal ka pantyon ka Patay ngaya para maka advance send ka notice.     
+*/

@@ -43,14 +43,20 @@ class DeceasedRecordController extends Controller
 
     /**
      * Show the form for creating a new resource.
+     * Note: Registration now requires payment first - redirect to payment page
      */
     public function create()
     {
-        return Inertia::render('DeceasedRecords/Create');
+        return Inertia::render('DeceasedRecords/Create', [
+            'requiresPayment' => true,
+            'standardAmount' => 5000.00,
+            'renewalYears' => 5
+        ]);
     }
 
     /**
      * Store a newly created resource in storage.
+     * This should only be called after payment is made
      */
     public function store(Request $request)
     {
@@ -65,16 +71,22 @@ class DeceasedRecordController extends Controller
             'contact_number' => 'required|string|max:20',
             'email' => 'nullable|email|max:255',
             'address' => 'nullable|string',
-            'payment_due_date' => 'nullable|date',
-            'payment_status' => 'required|in:paid,pending,overdue',
         ]);
 
+        // Calculate payment due date: 5 years from date of death
+        $dateOfDeath = new \DateTime($validated['date_of_death']);
+        $paymentDueDate = clone $dateOfDeath;
+        $paymentDueDate->modify('+5 years');
+
+        $validated['payment_due_date'] = $paymentDueDate->format('Y-m-d');
+        $validated['payment_status'] = 'pending'; // Will be updated when payment is made
         $validated['created_by'] = Auth::id();
 
-        DeceasedRecord::create($validated);
+        $deceased = DeceasedRecord::create($validated);
 
-        return redirect()->route('deceased.index')
-            ->with('success', 'Deceased record created successfully.');
+        // Redirect to payment page with the deceased record
+        return redirect()->route('payments.create', ['deceased_id' => $deceased->id])
+            ->with('info', 'Deceased registered. Please complete the initial payment of ₱5,000.00 for 5 years.');
     }
 
     /**
@@ -115,8 +127,6 @@ class DeceasedRecordController extends Controller
             'contact_number' => 'required|string|max:20',
             'email' => 'nullable|email|max:255',
             'address' => 'nullable|string',
-            'payment_due_date' => 'nullable|date',
-            'payment_status' => 'required|in:paid,pending,overdue',
         ]);
 
         $validated['updated_by'] = Auth::id();

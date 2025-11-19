@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 03, 2025 at 01:36 PM
+-- Generation Time: Nov 19, 2025 at 01:04 AM
 -- Server version: 10.4.32-MariaDB
--- PHP Version: 8.0.30
+-- PHP Version: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -77,7 +77,15 @@ CREATE TABLE `deceased_records` (
 --
 
 INSERT INTO `deceased_records` (`id`, `fullname`, `birthday`, `date_of_death`, `tomb_number`, `tomb_location`, `next_of_kin_name`, `next_of_kin_relationship`, `contact_number`, `email`, `address`, `payment_due_date`, `payment_status`, `created_by`, `updated_by`, `created_at`, `updated_at`, `deleted_at`) VALUES
-(1, 'Rosalie L. Sumugat', '1974-03-12', '2021-06-01', '33', 'South East', 'John Carlo L. Sumugat', 'Mother', '09567460163', 'jcsumugatxd@gmail.com', 'Culasi Antique, Philippines', '2026-10-19', 'paid', 1, NULL, '2025-10-19 03:23:48', '2025-10-19 03:24:46', NULL);
+(1, 'Rosalie L. Sumugat', '1974-12-03', '2025-06-01', '12', 'South east A', 'John Carlo Sumugat', 'Son', '09567460163', 'jcsumugatxd@gmail.com', 'Culasi Antique, Philippines', '2030-06-01', 'paid', 1, 1, '2025-10-20 08:12:23', '2025-10-20 08:43:34', NULL),
+(2, 'Pedro E. Manzano', '1978-09-09', '2025-05-05', '55', 'North east A', 'John Carlo Sumugat', NULL, '09567460163', 'jcsumugatxd@gmail.com', 'Culasi Antique, Philippines', '2030-05-05', 'paid', 1, 1, '2025-10-20 20:25:45', '2025-10-21 08:29:27', NULL),
+(3, 'Juan Dela Cruz', '2002-09-09', '2025-09-09', '110', 'North east A', 'John Carlo Sumugat', 'Other', '09567460163', 'jcsumugatxd@gmail.com', 'Culasi Antique, Philippines', '2026-10-23', 'paid', 2, NULL, '2025-10-20 20:40:06', '2025-10-22 20:06:59', NULL),
+(4, 'Saturtina Canata', '1999-09-13', '2025-10-15', '113', 'North East B', 'Alexander Canata', 'Son', '09122478658', NULL, 'Balac- balac Culasi', '2030-10-15', 'pending', 3, 3, '2025-10-22 20:04:18', '2025-10-22 20:13:55', NULL),
+(5, 'Steve Jobs', '2015-01-10', '2025-10-27', '11', 'South West B', 'Sheryl Jobs', 'Sister', '09122478658', NULL, NULL, '2026-10-28', 'paid', 5, NULL, '2025-10-27 18:27:39', '2025-10-27 18:34:24', NULL),
+(6, 'Aldren Dela  Cruz', '2018-06-13', '2025-10-27', '13', 'North East B', 'Sharon Dela Cruz', 'Spouse', '09122478658', NULL, NULL, '2026-10-28', 'paid', 5, NULL, '2025-10-27 19:03:54', '2025-10-27 19:05:33', NULL),
+(7, 'adan', '2014-02-16', '2025-08-17', '25', 'South East B', 'sheryl', 'Sister', '09122478658', NULL, 'Balac-balac Culasi Antique', '2026-10-29', 'paid', 5, 5, '2025-10-28 19:13:16', '2025-10-28 19:20:53', '2025-10-28 19:20:53'),
+(8, 'Saturtina Canata', '1987-09-09', '2024-08-06', '23', 'South West B', 'Alexander Canata', 'Brother', '09122478658', 'floresglendamie@gmail.com', ',njvj,h', '2030-08-06', 'paid', 5, NULL, '2025-11-18 00:22:58', '2025-11-18 00:22:58', NULL),
+(9, 'juan dela cruz', '1988-03-13', '2025-11-18', '15', 'North West A', 'eric dela druz', 'Son', '09122478658', NULL, 'balac balac culasi antique', '2030-11-18', 'pending', 5, NULL, '2025-11-18 00:56:48', '2025-11-18 00:56:48', NULL);
 
 -- --------------------------------------------------------
 
@@ -150,10 +158,11 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (1, '0001_01_01_000000_create_users_table', 1),
 (2, '0001_01_01_000001_create_cache_table', 1),
 (3, '0001_01_01_000002_create_jobs_table', 1),
-(4, '2025_10_18_151938_create_deceased_records_table', 2),
-(5, '2025_10_18_152358_create_payment_records_table', 2),
-(6, '2025_10_18_152434_create_renewal_records_table', 2),
-(7, '2025_10_18_152456_create_notice_distributions_table', 2);
+(4, '2025_10_18_151938_create_deceased_records_table', 1),
+(5, '2025_10_18_152358_create_payment_records_table', 1),
+(6, '2025_10_18_152434_create_renewal_records_table', 1),
+(7, '2025_10_18_152456_create_notice_distributions_table', 1),
+(8, '2025_10_21_153206_add_mobile_number_to_users_table', 2);
 
 -- --------------------------------------------------------
 
@@ -177,6 +186,20 @@ CREATE TABLE `notice_distributions` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `notice_distributions`
+--
+
+INSERT INTO `notice_distributions` (`id`, `deceased_record_id`, `recipient_name`, `recipient_number`, `message`, `notice_type`, `status`, `sent_at`, `delivered_at`, `error_message`, `retry_count`, `sent_by`, `created_at`, `updated_at`) VALUES
+(1, 2, 'John Carlo Sumugat', '09567460163', 'Dear John Carlo Sumugat, your tomb renewal is due. Please contact us or visit the office to process your renewal. Thank you.', 'renewal_notice', 'sent', '2025-10-20 20:36:45', NULL, NULL, 0, 2, '2025-10-20 20:36:45', '2025-10-20 20:36:45'),
+(2, 3, 'John Carlo Sumugat', '09122478658', 'Dear John Carlo Sumugat, your tomb renewal is due. Please contact us or visit the office to process your renewal. Thank you.', 'renewal_notice', 'sent', '2025-10-22 19:56:11', NULL, NULL, 0, 3, '2025-10-22 19:56:11', '2025-10-22 19:56:11'),
+(3, 5, 'Sheryl Jobs', '09122478658', 'Dear Sheryl Jobs, your payment is now overdue. Please settle your account immediately to avoid penalties. Thank you.', 'overdue_notice', 'sent', '2025-10-27 18:45:18', NULL, NULL, 0, 5, '2025-10-27 18:45:18', '2025-10-27 18:45:18'),
+(4, 6, 'Sharon Dela Cruz', '09122478658', 'Dear Sharon............', 'general', 'sent', '2025-10-27 19:08:38', NULL, NULL, 0, 5, '2025-10-27 19:08:38', '2025-10-27 19:08:38'),
+(5, 2, 'John Carlo Sumugat', '09567460163', 'Dear Jc.....', 'general', 'sent', '2025-10-28 01:08:57', NULL, NULL, 0, 5, '2025-10-28 01:08:57', '2025-10-28 01:08:57'),
+(6, 7, 'sheryl', '09122478658', 'Dear Shyrl', 'general', 'sent', '2025-10-28 19:19:28', NULL, NULL, 0, 5, '2025-10-28 19:19:28', '2025-10-28 19:19:28'),
+(7, 8, 'Alexander Canata', '09122478658', 'Dear , your tomb renewal is due. Please contact us or visit the office to process your renewal. Thank you.', 'renewal_notice', 'sent', '2025-11-18 00:24:47', NULL, NULL, 0, 5, '2025-11-18 00:24:47', '2025-11-18 00:24:47'),
+(8, 9, 'eric dela druz', '09122478658', 'dear....', 'general', 'sent', '2025-11-18 01:02:44', NULL, NULL, 0, 5, '2025-11-18 01:02:44', '2025-11-18 01:02:44');
 
 -- --------------------------------------------------------
 
@@ -216,7 +239,12 @@ CREATE TABLE `payment_records` (
 --
 
 INSERT INTO `payment_records` (`id`, `deceased_record_id`, `amount`, `payment_date`, `payment_type`, `payment_method`, `receipt_number`, `official_receipt_number`, `remarks`, `received_by`, `created_at`, `updated_at`) VALUES
-(1, 1, 150.00, '2025-10-19', 'initial', 'cash', 'RCP-20251019-SILKDP', NULL, NULL, 1, '2025-10-19 03:24:46', '2025-10-19 03:24:46');
+(1, 3, 1500.00, '2025-10-21', 'initial', 'cash', 'RCP-20251021-SQWR9R', NULL, NULL, 2, '2025-10-20 20:45:32', '2025-10-20 20:45:32'),
+(2, 3, 5000.00, '2025-10-23', 'renewal', 'cash', 'RCP-20251023-XFECMW', NULL, NULL, 3, '2025-10-22 20:06:59', '2025-10-22 20:06:59'),
+(3, 5, 5000.00, '2025-10-28', 'initial', 'cash', 'RCP-20251028-OOBEX7', NULL, NULL, 5, '2025-10-27 18:34:24', '2025-10-27 18:34:24'),
+(4, 6, 5000.00, '2025-10-28', 'initial', 'cash', 'RCP-20251028-XIMVSU', NULL, NULL, 5, '2025-10-27 19:05:33', '2025-10-27 19:05:33'),
+(5, 7, 1000.00, '2025-10-29', 'initial', 'cash', 'RCP-20251029-MPUEUF', NULL, NULL, 5, '2025-10-28 19:16:32', '2025-10-28 19:16:32'),
+(6, 7, 1000.00, '2025-10-29', 'initial', 'cash', 'RCP-20251029-CXQ5GE', '4413551', NULL, 5, '2025-10-28 19:17:44', '2025-10-28 19:17:44');
 
 -- --------------------------------------------------------
 
@@ -242,7 +270,8 @@ CREATE TABLE `renewal_records` (
 --
 
 INSERT INTO `renewal_records` (`id`, `deceased_record_id`, `renewal_date`, `next_renewal_date`, `renewal_fee`, `status`, `processed_by`, `remarks`, `created_at`, `updated_at`) VALUES
-(1, 1, '2025-10-19', '2026-10-19', 1500.00, 'active', 1, NULL, '2025-10-19 03:26:43', '2025-10-19 19:32:27');
+(1, 5, '2025-10-28', '2030-10-28', 5000.00, 'active', 5, NULL, '2025-10-27 18:36:31', '2025-10-27 18:36:31'),
+(2, 6, '2025-10-28', '2030-10-28', 5000.00, 'active', 5, NULL, '2025-10-27 19:06:51', '2025-10-27 19:06:51');
 
 -- --------------------------------------------------------
 
@@ -264,7 +293,10 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('8EHLN7jlljFy3lkgraNyxXxW2HO4qX2XH7EcsWag', 4, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoibWRQRkRHdGI1V3FZY2tPeDNFYkxZTnRoZXE4OVdyb1pPbkM0YzkyRiI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MzE6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9kYXNoYm9hcmQiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX1zOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7aTo0O3M6MzoidXJsIjthOjE6e3M6ODoiaW50ZW5kZWQiO3M6MzA6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9yZW5ld2FscyI7fX0=', 1762173375);
+('4yEaP8ZztPPKstAlTrJH5H2ssBBepNHfbQLWY93q', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiaEIyV1lyRTZyUkpsUEpTdE9qUVZvMDVob1hxanlkZWNhUmJlU290VCI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MzE6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9kYXNoYm9hcmQiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX1zOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7aToxO30=', 1763510270),
+('iyOBnxe219H4ZSySDPfKgW9uCKrEgWqgjh0SEa2n', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiVGh5RnRaR0puT0l4aHNKRkhLVmdscjg5N25sU1NpN0JpWU9JUHlzMiI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MjE6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMCI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=', 1763465806),
+('K5VrHNiuo2RB5gNikojJaNcfX1V41ZqXtAb4PDpr', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoibUtaTUlaU2ZqRUYycXQ5b1pxbmdCYVdaWmNIRmc5dVVWd3ZyWW5aeCI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJuZXciO2E6MDp7fXM6Mzoib2xkIjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MzA6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9wYXltZW50cyI7fXM6NTA6ImxvZ2luX3dlYl81OWJhMzZhZGRjMmIyZjk0MDE1ODBmMDE0YzdmNThlYTRlMzA5ODlkIjtpOjE7fQ==', 1763477248),
+('QVCy98AelYPoutvyTU7cM3wkdI2uIxaTdxEbKYS4', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiVWI1N3JpaWdrc1pjNmVpeXpFWE9PV3d3VDJhWE5pTHRLQmhlek0yZyI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MzE6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9kYXNoYm9hcmQiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX1zOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7aToxO30=', 1763466514);
 
 -- --------------------------------------------------------
 
@@ -289,8 +321,11 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `name`, `email`, `mobile_number`, `email_verified_at`, `password`, `remember_token`, `created_at`, `updated_at`) VALUES
-(1, 'Admin', 'admin@prand.com', NULL, NULL, '$2y$12$fP.Fa8z/E86916.ydftsaefaL3qIZRE.46d1RKimbotgIsyIvWh1y', NULL, '2025-10-18 06:39:52', '2025-10-18 06:39:52'),
-(4, 'Jc', 'jcsumugatxd@gmail.com', '09567460163', NULL, '$2y$12$O5KPMJE1LfXlTOnpRIWFrOWDmjFUI0/hOYCsn4VDdWp87NxDEMLHy', NULL, '2025-11-03 03:36:42', '2025-11-03 03:36:42');
+(1, 'John Carlo Sumugat', 'jcsumugatxd@gmail.com', '09567460163', NULL, '$2y$12$jKCDxP0DlNaCM.7xDR1V7./oOmE8BEqr8C1ZFMx28L0ADIh7H86hu', NULL, '2025-10-20 08:09:47', '2025-10-20 08:09:47'),
+(2, 'Jonah Saracanlao', 'jonahsaracanlao@gmail.com', '09569833156', NULL, '$2y$12$cBcQNuFFqJCE3Ppr3mL1OuFSKffjx0jRBc0TezjtbVCkBJDn1e8eC', NULL, '2025-10-20 20:34:59', '2025-10-20 20:34:59'),
+(3, 'May Ann Antonio', 'mayannantonio478@gmail.com', '09705984260', NULL, '$2y$12$iJGIsIcEe9OU2aIkypl2ju/WlYICBwKqZU2k2saEu/L2fd7U/bHaW', NULL, '2025-10-22 19:54:03', '2025-10-22 19:54:03'),
+(4, 'Aliana Cabigon', 'cabigonma.aliana17@gmail.com', '09671679772', NULL, '$2y$12$vceCUn4REuIX26FmbaY2je47neny.weO9jACVk.2/.IdsImG1euei', NULL, '2025-10-23 17:35:55', '2025-10-23 17:35:55'),
+(5, 'Glenda Mie Flores', 'floresglendamie@gmail.com', '09485266455', NULL, '$2y$12$3OTrxlSBHtFZLVdwenSUPOE4M4Fp3YV9JyNhh2gaBzJrQw5JS..Fe', NULL, '2025-10-23 18:36:03', '2025-10-23 18:36:03');
 
 --
 -- Indexes for dumped tables
@@ -397,7 +432,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `deceased_records`
 --
 ALTER TABLE `deceased_records`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `failed_jobs`
@@ -415,31 +450,31 @@ ALTER TABLE `jobs`
 -- AUTO_INCREMENT for table `migrations`
 --
 ALTER TABLE `migrations`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `notice_distributions`
 --
 ALTER TABLE `notice_distributions`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `payment_records`
 --
 ALTER TABLE `payment_records`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `renewal_records`
 --
 ALTER TABLE `renewal_records`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- Constraints for dumped tables

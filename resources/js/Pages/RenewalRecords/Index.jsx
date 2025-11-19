@@ -1,11 +1,29 @@
 import { useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
-import { PencilIcon, TrashIcon, MagnifyingGlassIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { 
+    PencilIcon, 
+    TrashIcon, 
+    MagnifyingGlassIcon, 
+    PlusIcon,
+    ClockIcon,
+    CheckCircleIcon,
+    ExclamationTriangleIcon,
+    BanknotesIcon
+} from '@heroicons/react/24/outline';
 
-export default function Index({ renewals, filters }) {
-    const [search, setSearch] = useState(filters.search || '');
-    const [status, setStatus] = useState(filters.status || '');
+export default function Index({ renewals, filters, stats = {}, needsRenewal = [] }) {
+    const [search, setSearch] = useState(filters?.search || '');
+    const [status, setStatus] = useState(filters?.status || '');
+    const [showNeedsRenewal, setShowNeedsRenewal] = useState(true);
+
+    // Provide default values for stats
+    const safeStats = {
+        total_renewals: stats?.total_renewals || 0,
+        active_renewals: stats?.active_renewals || 0,
+        due_soon: stats?.due_soon || 0,
+        overdue: stats?.overdue || 0,
+    };
 
     const handleSearch = (e) => {
         e.preventDefault();
@@ -40,16 +58,151 @@ export default function Index({ renewals, filters }) {
                 <div className="flex justify-between items-center">
                     <div>
                         <h2 className="text-2xl font-bold text-gray-800">RENEWAL RECORDS</h2>
-                        <p className="text-gray-600 mt-1">Manage all renewal transactions</p>
+                        <p className="text-gray-600 mt-1">Track renewals and upcoming due dates (₱5,000 for 5 years)</p>
                     </div>
                     <Link
-                        href={route('renewals.create')}
+                        href={route('payments.create')}
                         className="flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-pink-700 transition shadow-lg"
                     >
                         <PlusIcon className="h-5 w-5 mr-2" />
-                        Process Renewal
+                        Record Renewal Payment
                     </Link>
                 </div>
+
+                {/* Statistics Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg shadow-md p-6 border-2 border-blue-200">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-xs font-semibold text-blue-700 uppercase">Total Renewals</p>
+                                <p className="text-2xl font-bold text-blue-900 mt-1">{stats.total_renewals}</p>
+                            </div>
+                            <CheckCircleIcon className="h-10 w-10 text-blue-400" />
+                        </div>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg shadow-md p-6 border-2 border-green-200">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-xs font-semibold text-green-700 uppercase">Active Renewals</p>
+                                <p className="text-2xl font-bold text-green-900 mt-1">{stats.active_renewals}</p>
+                            </div>
+                            <CheckCircleIcon className="h-10 w-10 text-green-400" />
+                        </div>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg shadow-md p-6 border-2 border-orange-200">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-xs font-semibold text-orange-700 uppercase">Due Soon (2 Months)</p>
+                                <p className="text-2xl font-bold text-orange-900 mt-1">{stats.due_soon}</p>
+                            </div>
+                            <ClockIcon className="h-10 w-10 text-orange-400" />
+                        </div>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-lg shadow-md p-6 border-2 border-red-200">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-xs font-semibold text-red-700 uppercase">Overdue</p>
+                                <p className="text-2xl font-bold text-red-900 mt-1">{stats.overdue}</p>
+                            </div>
+                            <ExclamationTriangleIcon className="h-10 w-10 text-red-400" />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Needs Renewal Section */}
+                {needsRenewal && needsRenewal.length > 0 && (
+                    <div className="bg-white rounded-xl shadow-lg overflow-hidden border-2 border-orange-300">
+                        <div className="bg-gradient-to-r from-orange-100 to-yellow-100 px-6 py-4 flex items-center justify-between">
+                            <div className="flex items-center">
+                                <ExclamationTriangleIcon className="h-6 w-6 text-orange-600 mr-3" />
+                                <h3 className="text-lg font-bold text-orange-900">
+                                    Requires Renewal - Due or Nearly Due (Within 2 Months)
+                                </h3>
+                            </div>
+                            <button
+                                onClick={() => setShowNeedsRenewal(!showNeedsRenewal)}
+                                className="text-sm font-semibold text-orange-700 hover:text-orange-900"
+                            >
+                                {showNeedsRenewal ? 'Hide' : 'Show'}
+                            </button>
+                        </div>
+                        
+                        {showNeedsRenewal && (
+                            <div className="overflow-x-auto">
+                                <table className="min-w-full divide-y divide-gray-200">
+                                    <thead className="bg-orange-50">
+                                        <tr>
+                                            <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase">Deceased Name</th>
+                                            <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase">Tomb</th>
+                                            <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase">Payor</th>
+                                            <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase">Contact</th>
+                                            <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase">Due Date</th>
+                                            <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase">Status</th>
+                                            <th className="px-6 py-3 text-center text-xs font-bold text-gray-700 uppercase">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-200">
+                                        {needsRenewal.map((record) => (
+                                            <tr 
+                                                key={record.id} 
+                                                className={`hover:bg-orange-50 transition ${record.is_overdue ? 'bg-red-50' : ''}`}
+                                            >
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <div className="text-sm font-semibold text-gray-900">{record.fullname}</div>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                                    <div>{record.tomb_number}</div>
+                                                    <div className="text-xs text-gray-500">{record.tomb_location}</div>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                                    {record.next_of_kin_name}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                                    {record.contact_number}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                                    <div className={record.is_overdue ? 'text-red-600 font-bold' : 'text-gray-700'}>
+                                                        {new Date(record.payment_due_date).toLocaleDateString('en-US', {
+                                                            month: 'short',
+                                                            day: '2-digit',
+                                                            year: 'numeric'
+                                                        })}
+                                                    </div>
+                                                    <div className="text-xs text-gray-500">
+                                                        Last payment: {record.last_payment_date ? new Date(record.last_payment_date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : 'N/A'}
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    {record.is_overdue ? (
+                                                        <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                                            Overdue ({Math.abs(record.days_until_due)} days)
+                                                        </span>
+                                                    ) : (
+                                                        <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-orange-100 text-orange-800">
+                                                            Due in {record.days_until_due} days
+                                                        </span>
+                                                    )}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-center">
+                                                    <Link
+                                                        href={`/payments/create?deceased_id=${record.id}`}
+                                                        className="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 transition"
+                                                    >
+                                                        <BanknotesIcon className="h-4 w-4 mr-1" />
+                                                        Pay Now
+                                                    </Link>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 {/* Search and Filter */}
                 <div className="bg-white rounded-xl shadow-md p-6">
@@ -91,11 +244,14 @@ export default function Index({ renewals, filters }) {
                     </form>
                 </div>
 
-                {/* Table */}
+                {/* All Renewal Records Table */}
                 <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div className="bg-gradient-to-r from-blue-200 to-cyan-200 px-6 py-4">
+                        <h3 className="text-lg font-bold text-gray-800">All Renewal Records</h3>
+                    </div>
                     <div className="overflow-x-auto">
                         <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gradient-to-r from-blue-200 to-cyan-200">
+                            <thead className="bg-blue-50">
                                 <tr>
                                     <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase">Deceased Name</th>
                                     <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase">Tomb Number</th>
@@ -197,12 +353,12 @@ export default function Index({ renewals, filters }) {
                                         <Link
                                             key={index}
                                             href={link.url || '#'}
-                                            className={`px-4 py-2 text-sm font-medium rounded-lg transition text-white ${
+                                            className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
                                                 link.active
-                                                    ? 'bg-blue-600 hover:bg-blue-700'
+                                                    ? 'bg-blue-600 text-white'
                                                     : link.url
-                                                    ? 'bg-blue-600 hover:bg-blue-700'
-                                                    : 'bg-gray-400 cursor-not-allowed'
+                                                    ? 'bg-white text-gray-700 hover:bg-blue-50 border border-gray-300'
+                                                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                                             }`}
                                             dangerouslySetInnerHTML={{ __html: link.label }}
                                             preserveState

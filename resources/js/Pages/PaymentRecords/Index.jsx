@@ -6,9 +6,12 @@ import {
     TrashIcon,
     MagnifyingGlassIcon,
     PlusIcon,
+    BanknotesIcon,
+    ClockIcon,
+    CheckCircleIcon,
 } from "@heroicons/react/24/outline";
 
-export default function Index({ payments, filters }) {
+export default function Index({ payments, filters, stats }) {
     const [search, setSearch] = useState(filters.search || "");
     const [type, setType] = useState(filters.type || "");
     const [method, setMethod] = useState(filters.method || "");
@@ -63,7 +66,7 @@ export default function Index({ payments, filters }) {
                             PAYMENT RECORDS
                         </h2>
                         <p className="text-gray-600 mt-1">
-                            Manage all payment transactions
+                            Manage all payment transactions (₱5,000 for 5 years)
                         </p>
                     </div>
                     <Link
@@ -73,6 +76,61 @@ export default function Index({ payments, filters }) {
                         <PlusIcon className="h-5 w-5 mr-2" />
                         Record Payment
                     </Link>
+                </div>
+
+                {/* Statistics Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                    <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg shadow-md p-6 border-2 border-blue-200">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-xs font-semibold text-blue-700 uppercase">Total Payments</p>
+                                <p className="text-2xl font-bold text-blue-900 mt-1">{stats.total_payments}</p>
+                            </div>
+                            <BanknotesIcon className="h-10 w-10 text-blue-400" />
+                        </div>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg shadow-md p-6 border-2 border-green-200">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-xs font-semibold text-green-700 uppercase">Total Amount</p>
+                                <p className="text-2xl font-bold text-green-900 mt-1">
+                                    ₱{parseFloat(stats.total_amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                </p>
+                            </div>
+                            <BanknotesIcon className="h-10 w-10 text-green-400" />
+                        </div>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg shadow-md p-6 border-2 border-purple-200">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-xs font-semibold text-purple-700 uppercase">Initial Payments</p>
+                                <p className="text-2xl font-bold text-purple-900 mt-1">{stats.initial_payments}</p>
+                            </div>
+                            <CheckCircleIcon className="h-10 w-10 text-purple-400" />
+                        </div>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-teal-50 to-teal-100 rounded-lg shadow-md p-6 border-2 border-teal-200">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-xs font-semibold text-teal-700 uppercase">Renewal Payments</p>
+                                <p className="text-2xl font-bold text-teal-900 mt-1">{stats.renewal_payments}</p>
+                            </div>
+                            <CheckCircleIcon className="h-10 w-10 text-teal-400" />
+                        </div>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg shadow-md p-6 border-2 border-orange-200">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-xs font-semibold text-orange-700 uppercase">Pending Renewals</p>
+                                <p className="text-2xl font-bold text-orange-900 mt-1">{stats.pending_renewals}</p>
+                            </div>
+                            <ClockIcon className="h-10 w-10 text-orange-400" />
+                        </div>
+                    </div>
                 </div>
 
                 {/* Search and Filter */}
@@ -151,6 +209,9 @@ export default function Index({ payments, filters }) {
                                         Type
                                     </th>
                                     <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase">
+                                        Method
+                                    </th>
+                                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase">
                                         Received By
                                     </th>
                                     <th className="px-6 py-4 text-center text-xs font-bold text-gray-700 uppercase">
@@ -169,6 +230,11 @@ export default function Index({ payments, filters }) {
                                                 <span className="text-sm font-semibold text-green-700">
                                                     {payment.receipt_number}
                                                 </span>
+                                                {payment.official_receipt_number && (
+                                                    <div className="text-xs text-gray-500">
+                                                        OR: {payment.official_receipt_number}
+                                                    </div>
+                                                )}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="text-sm font-medium text-gray-900">
@@ -212,6 +278,16 @@ export default function Index({ payments, filters }) {
                                                         payment.payment_type.slice(
                                                             1
                                                         )}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <span
+                                                    className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getMethodBadge(
+                                                        payment.payment_method
+                                                    )}`}
+                                                >
+                                                    {payment.payment_method === 'bank_transfer' ? 'Bank Transfer' :
+                                                     payment.payment_method.charAt(0).toUpperCase() + payment.payment_method.slice(1)}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">

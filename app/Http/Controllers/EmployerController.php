@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rules;
 use Illuminate\Validation\ValidationException;
 
@@ -65,7 +66,31 @@ class EmployerController extends Controller
     }
 
     /**
-     * Verify employer password before allowing edit/delete
+     * Verify the currently logged-in user's password (for authorization)
+     * This is different from verifying the target employer's password
+     */
+    public function verifyCurrentPassword(Request $request)
+    {
+        $validated = $request->validate([
+            'password' => 'required|string',
+        ]);
+
+        // Check if the password matches the CURRENTLY LOGGED-IN user's password
+        if (!Hash::check($validated['password'], Auth::user()->password)) {
+            return response()->json([
+                'verified' => false,
+                'message' => 'Incorrect password. Please enter YOUR account password.'
+            ], 401);
+        }
+
+        return response()->json([
+            'verified' => true,
+            'message' => 'Password verified successfully.'
+        ]);
+    }
+
+    /**
+     * Verify employer password before allowing edit/delete (OLD METHOD - keeping for backwards compatibility)
      */
     public function verifyPassword(Request $request, User $employer)
     {
@@ -138,17 +163,9 @@ class EmployerController extends Controller
      */
     public function destroy(Request $request, User $employer)
     {
-        // Verify account password first
-        $request->validate([
-            'password' => 'required|string',
-        ]);
-
-        if (!Hash::check($request->password, $employer->password)) {
-            throw ValidationException::withMessages([
-                'password' => ['The account password is incorrect.'],
-            ]);
-        }
-
+        // No password verification needed here since it was already verified 
+        // in the frontend before the delete request was sent
+        
         $employer->delete();
 
         return redirect()->route('employers.index')

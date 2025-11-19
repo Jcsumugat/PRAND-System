@@ -5,8 +5,9 @@ import InputError from "@/Components/InputError";
 import InputLabel from "@/Components/InputLabel";
 import PrimaryButton from "@/Components/PrimaryButton";
 import TextInput from "@/Components/TextInput";
+import { InformationCircleIcon } from "@heroicons/react/24/outline";
 
-export default function Create() {
+export default function Create({ requiresPayment = true, standardAmount = 5000, renewalYears = 5 }) {
     const { data, setData, post, processing, errors, reset } = useForm({
         fullname: "",
         birthday: "",
@@ -18,15 +19,11 @@ export default function Create() {
         contact_number: "",
         email: "",
         address: "",
-        payment_due_date: "",
-        payment_status: "pending",
     });
 
     const submit = (e) => {
         e.preventDefault();
-        post(route("deceased.store"), {
-            onSuccess: () => reset(),
-        });
+        post(route("deceased.store"));
     };
 
     return (
@@ -43,6 +40,34 @@ export default function Create() {
                         Register new deceased information
                     </p>
                 </div>
+
+                {/* Payment Notice */}
+                {requiresPayment && (
+                    <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-300 rounded-xl p-6 mb-6">
+                        <div className="flex items-start">
+                            <InformationCircleIcon className="h-6 w-6 text-blue-600 mr-3 flex-shrink-0 mt-1" />
+                            <div>
+                                <h3 className="text-lg font-bold text-blue-900 mb-2">
+                                    Payment Required After Registration
+                                </h3>
+                                <div className="space-y-2 text-sm text-blue-800">
+                                    <p>
+                                        After completing this registration form, you will be redirected to make the <strong>initial payment</strong>.
+                                    </p>
+                                    <div className="bg-white/50 rounded-lg p-4 mt-3">
+                                        <p className="font-semibold text-blue-900 mb-2">Payment Details:</p>
+                                        <ul className="space-y-1 list-disc list-inside">
+                                            <li><strong>Amount:</strong> ₱{standardAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</li>
+                                            <li><strong>Coverage:</strong> {renewalYears} years from date of death</li>
+                                            <li><strong>Payment Method:</strong> Cash (Walk-in only)</li>
+                                            <li><strong>Renewal:</strong> ₱{standardAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })} every {renewalYears} years</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Form Card */}
                 <div className="bg-gradient-to-br from-pink-50 to-purple-50 rounded-xl shadow-lg p-8">
@@ -214,7 +239,7 @@ export default function Create() {
                         {/* Next of Kin Information Section */}
                         <div className="bg-white rounded-lg p-6 shadow-sm">
                             <h3 className="text-lg font-semibold text-purple-700 mb-4 border-b pb-2">
-                                Payor
+                                PAYOR INFORMATION
                             </h3>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -337,7 +362,7 @@ export default function Create() {
                                 <div className="md:col-span-2">
                                     <InputLabel
                                         htmlFor="address"
-                                        value="Address"
+                                        value="Address (Optional)"
                                         className="text-gray-700 font-semibold"
                                     />
                                     <textarea
@@ -357,67 +382,19 @@ export default function Create() {
                             </div>
                         </div>
 
-                        {/* Payment Information Section */}
-                        <div className="bg-white rounded-lg p-6 shadow-sm">
-                            <h3 className="text-lg font-semibold text-purple-700 mb-4 border-b pb-2">
-                                PAYMENT INFORMATION
-                            </h3>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {/* Payment Due Date */}
-                                <div>
-                                    <InputLabel
-                                        htmlFor="payment_due_date"
-                                        value="Payment Due Date"
-                                        className="text-gray-700 font-semibold"
-                                    />
-                                    <TextInput
-                                        id="payment_due_date"
-                                        type="date"
-                                        value={data.payment_due_date}
-                                        className="mt-1 block w-full bg-pink-50 border-pink-200 focus:border-purple-500 focus:ring-purple-500"
-                                        onChange={(e) =>
-                                            setData(
-                                                "payment_due_date",
-                                                e.target.value
-                                            )
-                                        }
-                                    />
-                                    <InputError
-                                        message={errors.payment_due_date}
-                                        className="mt-2"
-                                    />
-                                </div>
-
-                                {/* Payment Status */}
-                                <div>
-                                    <InputLabel
-                                        htmlFor="payment_status"
-                                        value="Payment Status *"
-                                        className="text-gray-700 font-semibold"
-                                    />
-                                    <select
-                                        id="payment_status"
-                                        value={data.payment_status}
-                                        className="mt-1 block w-full bg-pink-50 border-pink-200 rounded-md shadow-sm focus:border-purple-500 focus:ring-purple-500"
-                                        onChange={(e) =>
-                                            setData(
-                                                "payment_status",
-                                                e.target.value
-                                            )
-                                        }
-                                        required
-                                    >
-                                        <option value="pending">Pending</option>
-                                        <option value="paid">Paid</option>
-                                        <option value="overdue">Overdue</option>
-                                    </select>
-                                    <InputError
-                                        message={errors.payment_status}
-                                        className="mt-2"
-                                    />
-                                </div>
-                            </div>
+                        {/* Next Steps Info */}
+                        <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-300 rounded-lg p-5">
+                            <h4 className="font-bold text-yellow-900 mb-2 flex items-center">
+                                <InformationCircleIcon className="h-5 w-5 mr-2" />
+                                Next Steps After Registration
+                            </h4>
+                            <ol className="list-decimal list-inside space-y-1 text-sm text-yellow-800">
+                                <li>Complete this registration form</li>
+                                <li>You will be redirected to the payment page</li>
+                                <li>Make the initial payment of ₱{standardAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</li>
+                                <li>Receive your payment receipt</li>
+                                <li>Registration will be complete</li>
+                            </ol>
                         </div>
 
                         {/* Action Buttons */}
@@ -433,7 +410,7 @@ export default function Create() {
                                 disabled={processing}
                                 className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
                             >
-                                {processing ? "Registering..." : "Register"}
+                                {processing ? "Registering..." : "Continue to Payment"}
                             </PrimaryButton>
                         </div>
                     </form>

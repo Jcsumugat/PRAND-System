@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Login - PRAND System</title>
+    <title>Reset Password - PRAND System</title>
 
     <style>
         body {
@@ -144,40 +144,10 @@
                     <p class="text-xs text-gray-600 mt-1">Municipal Cemetery of Culasi</p>
                 </div>
 
-                <div class="mb-8">
-                    <h2 class="text-2xl font-bold text-gray-800">Sign In</h2>
-                    <p class="text-sm text-gray-600 mt-1">Enter your credentials to access the dashboard</p>
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">Reset Password</h2>
+                    <p class="text-sm text-gray-600 mt-2">Enter your email and new password to reset your account.</p>
                 </div>
-
-                @if (session('status'))
-                    <div class="mb-6 glass-input border-green-400 p-4 rounded-xl alert-glow">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0">
-                                <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd"
-                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                        clip-rule="evenodd" />
-                                </svg>
-                            </div>
-                            <p class="ml-3 text-sm font-medium text-green-800">{{ session('status') }}</p>
-                        </div>
-                    </div>
-                @endif
-
-                @if (session('message'))
-                    <div class="mb-6 glass-input border-green-400 p-4 rounded-xl alert-glow">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0">
-                                <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd"
-                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                        clip-rule="evenodd" />
-                                </svg>
-                            </div>
-                            <p class="ml-3 text-sm font-medium text-green-800">{{ session('message') }}</p>
-                        </div>
-                    </div>
-                @endif
 
                 @if ($errors->any())
                     <div class="mb-6 glass-input border-red-400 p-4 rounded-xl alert-glow-error">
@@ -198,8 +168,11 @@
                     </div>
                 @endif
 
-                <form method="POST" action="/login" class="space-y-5">
+                <form method="POST" action="{{ route('password.store') }}" class="space-y-5">
                     @csrf
+
+                    <!-- Password Reset Token -->
+                    <input type="hidden" name="token" value="{{ $token }}">
 
                     <!-- Email Field -->
                     <div>
@@ -207,15 +180,14 @@
                             Email Address
                         </label>
                         <div class="relative group">
-                            <div
-                                class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none icon-small">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none icon-small">
                                 <svg class="h-5 w-5 text-indigo-500 group-focus-within:text-indigo-600 transition-colors"
                                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
                                 </svg>
                             </div>
-                            <input type="email" id="email" name="email" value="{{ old('email') }}" required
+                            <input type="email" id="email" name="email" value="{{ old('email', request()->email ?? '') }}" required
                                 autofocus
                                 class="glass-input w-full pl-12 pr-4 py-3.5 rounded-xl outline-none text-gray-800 font-medium placeholder-gray-500 @error('email') border-red-400 @enderror"
                                 placeholder="admin@prand.com">
@@ -225,11 +197,10 @@
                     <!-- Password Field -->
                     <div>
                         <label for="password" class="block text-sm font-semibold text-gray-700 mb-2">
-                            Password
+                            New Password
                         </label>
                         <div class="relative group">
-                            <div
-                                class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none icon-small">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none icon-small">
                                 <svg class="h-5 w-5 text-indigo-500 group-focus-within:text-indigo-600 transition-colors"
                                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -237,30 +208,28 @@
                                 </svg>
                             </div>
                             <input type="password" id="password" name="password" required
-                                class="glass-input w-full pl-12 pr-12 py-3.5 rounded-xl outline-none text-gray-800 font-medium placeholder-gray-500"
+                                class="glass-input w-full pl-12 pr-4 py-3.5 rounded-xl outline-none text-gray-800 font-medium placeholder-gray-500 @error('password') border-red-400 @enderror"
                                 placeholder="••••••••••">
-                            <div class="absolute inset-y-0 right-0 pr-4 flex items-center">
-                                <svg class="h-5 w-5 text-gray-500 toggle-password" fill="none" stroke="currentColor" viewBox="0 0 24 24" onclick="togglePassword('password', this)" style="min-width: 20px; min-height: 20px;">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                </svg>
-                            </div>
                         </div>
                     </div>
 
-                    <!-- Remember Me and Forgot Password -->
-                    <div class="flex items-center justify-between pt-2">
-                        <div class="flex items-center">
-                            <input type="checkbox" id="remember" name="remember"
-                                class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 focus:ring-2 cursor-pointer">
-                            <label for="remember" class="ml-2 text-sm text-gray-700 font-medium select-none cursor-pointer">
-                                Remember me
-                            </label>
+                    <!-- Confirm Password Field -->
+                    <div>
+                        <label for="password_confirmation" class="block text-sm font-semibold text-gray-700 mb-2">
+                            Confirm Password
+                        </label>
+                        <div class="relative group">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none icon-small">
+                                <svg class="h-5 w-5 text-indigo-500 group-focus-within:text-indigo-600 transition-colors"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                </svg>
+                            </div>
+                            <input type="password" id="password_confirmation" name="password_confirmation" required
+                                class="glass-input w-full pl-12 pr-4 py-3.5 rounded-xl outline-none text-gray-800 font-medium placeholder-gray-500"
+                                placeholder="••••••••••">
                         </div>
-                        <a href="{{ route('password.request') }}" 
-                            class="text-sm text-indigo-600 hover:text-purple-600 font-semibold transition-colors hover:underline">
-                            Forgot password?
-                        </a>
                     </div>
 
                     <!-- Submit Button -->
@@ -269,23 +238,12 @@
                         <span class="relative flex items-center justify-center icon-small">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            Sign In to Dashboard
+                            Reset Password
                         </span>
                     </button>
                 </form>
-
-                <!-- Register Link -->
-                <div class="mt-8 text-center">
-                    <p class="text-sm text-gray-600">
-                        Don't have an account?
-                        <a href="/register"
-                            class="font-bold text-indigo-600 hover:text-purple-600 transition-colors underline decoration-2 underline-offset-2">
-                            Create one here
-                        </a>
-                    </p>
-                </div>
             </div>
 
             <!-- Footer -->
@@ -293,7 +251,6 @@
                 <p class="text-sm text-white drop-shadow-lg font-medium">
                     Municipal Cemetery of Culasi, Antique
                 </p>
-
                 <p class="text-xs text-gray-200 mt-2 drop-shadow">
                     © 2025 PRAND System. All rights reserved.
                 </p>
@@ -301,7 +258,7 @@
         </div>
     </div>
 
-    <script>
+        <script>
         window.addEventListener('load', function() {
             document.body.classList.add('loaded');
         });
@@ -329,6 +286,7 @@
             }
         }
     </script>
+
 
 </body>
 

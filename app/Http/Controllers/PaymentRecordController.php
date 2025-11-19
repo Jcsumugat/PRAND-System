@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\PaymentRecord;
 use App\Models\DeceasedRecord;
+use App\Models\RenewalRecord;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class PaymentRecordController extends Controller
 {
@@ -43,9 +45,21 @@ class PaymentRecordController extends Controller
 
         $payments = $query->paginate(10)->withQueryString();
 
+        // Calculate statistics
+        $stats = [
+            'total_payments' => PaymentRecord::count(),
+            'total_amount' => PaymentRecord::sum('amount'),
+            'initial_payments' => PaymentRecord::where('payment_type', 'initial')->count(),
+            'renewal_payments' => PaymentRecord::where('payment_type', 'renewal')->count(),
+            'pending_renewals' => DeceasedRecord::where('payment_status', 'pending')
+                ->whereNotNull('payment_due_date')
+                ->count(),
+        ];
+
         return Inertia::render('PaymentRecords/Index', [
             'payments' => $payments,
-            'filters' => $request->only(['search', 'type', 'method'])
+            'filters' => $request->only(['search', 'type', 'method']),
+            'stats' => $stats
         ]);
     }
 
@@ -54,6 +68,7 @@ class PaymentRecordController extends Controller
      */
     public function create(Request $request)
     {
+        // Only get deceased records that don't have initial payment yet
         $deceasedRecords = DeceasedRecord::orderBy('fullname')->get();
         $selectedDeceased = null;
 
@@ -63,7 +78,9 @@ class PaymentRecordController extends Controller
 
         return Inertia::render('PaymentRecords/Create', [
             'deceasedRecords' => $deceasedRecords,
-            'selectedDeceased' => $selectedDeceased
+            'selectedDeceased' => $selectedDeceased,
+            'standardAmount' => 5000.00,
+            'renewalYears' => 5
         ]);
     }
 
@@ -82,23 +99,58 @@ class PaymentRecordController extends Controller
             'remarks' => 'nullable|string',
         ]);
 
-        // Generate unique receipt number
-        $validated['receipt_number'] = 'RCP-' . date('Ymd') . '-' . strtoupper(Str::random(6));
-        $validated['received_by'] = Auth::id();
+        DB::beginTransaction();
+        
+        try {
+            // Generate unique receipt number
+            $validated['receipt_number'] = 'RCP-' . date('Ymd') . '-' . strtoupper(Str::random(6));
+            $validated['received_by'] = Auth::id();
 
-        $paymentRecord = PaymentRecord::create($validated);
+            // Create payment record
+            $paymentRecord = PaymentRecord::create($validated);
 
-        // Update deceased record payment status
-        $deceased = DeceasedRecord::find($validated['deceased_record_id']);
-        if ($validated['payment_type'] === 'initial' || $validated['payment_type'] === 'renewal') {
-            $deceased->update([
-                'payment_status' => 'paid',
-                'payment_due_date' => now()->addYear()
-            ]);
+            // Get deceased record
+            $deceased = DeceasedRecord::find($validated['deceased_record_id']);
+
+            // Handle payment logic based on type
+            if ($validated['payment_type'] === 'initial') {
+                // For initial payment, set due date to 5 years from date of death
+                $deceased->update([
+                    'payment_status' => 'paid',
+                    'payment_due_date' => date('Y-m-d', strtotime($deceased->date_of_death . ' +5 years'))
+                ]);
+            } 
+            elseif ($validated['payment_type'] === 'renewal') {
+                // For renewal payment, extend due date by 5 years from current due date
+                $currentDueDate = $deceased->payment_due_date;
+                $newDueDate = date('Y-m-d', strtotime($currentDueDate . ' +5 years'));
+                
+                $deceased->update([
+                    'payment_status' => 'paid',
+                    'payment_due_date' => $newDueDate
+                ]);
+
+                // Create renewal record
+                RenewalRecord::create([
+                    'deceased_record_id' => $validated['deceased_record_id'],
+                    'renewal_date' => $validated['payment_date'],
+                    'next_renewal_date' => $newDueDate,
+                    'renewal_fee' => $validated['amount'],
+                    'status' => 'active',
+                    'processed_by' => Auth::id(),
+                    'remarks' => $validated['remarks']
+                ]);
+            }
+
+            DB::commit();
+
+            return redirect()->route('payments.index')
+                ->with('success', 'Payment recorded successfully. Receipt #: ' . $paymentRecord->receipt_number);
+                
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withErrors(['error' => 'Failed to record payment: ' . $e->getMessage()]);
         }
-
-        return redirect()->route('payments.index')
-            ->with('success', 'Payment recorded successfully. Receipt #: ' . $paymentRecord->receipt_number);
     }
 
     /**
@@ -122,7 +174,9 @@ class PaymentRecordController extends Controller
 
         return Inertia::render('PaymentRecords/Edit', [
             'payment' => $payment,
-            'deceasedRecords' => $deceasedRecords
+            'deceasedRecords' => $deceasedRecords,
+            'standardAmount' => 5000.00,
+            'renewalYears' => 5
         ]);
     }
 
@@ -151,9 +205,26 @@ class PaymentRecordController extends Controller
      */
     public function destroy(PaymentRecord $payment)
     {
-        $payment->delete();
+        DB::beginTransaction();
+        
+        try {
+            // If this is a renewal payment, also delete the corresponding renewal record
+            if ($payment->payment_type === 'renewal') {
+                RenewalRecord::where('deceased_record_id', $payment->deceased_record_id)
+                    ->where('renewal_date', $payment->payment_date)
+                    ->delete();
+            }
+            
+            $payment->delete();
+            
+            DB::commit();
 
-        return redirect()->route('payments.index')
-            ->with('success', 'Payment record deleted successfully.');
+            return redirect()->route('payments.index')
+                ->with('success', 'Payment record deleted successfully.');
+                
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withErrors(['error' => 'Failed to delete payment: ' . $e->getMessage()]);
+        }
     }
 }

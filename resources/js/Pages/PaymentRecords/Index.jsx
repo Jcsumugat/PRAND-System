@@ -5,25 +5,22 @@ import {
     TrashIcon,
     MagnifyingGlassIcon,
     PlusIcon,
-    BanknotesIcon,
+    DocumentTextIcon,
     ClockIcon,
     CheckCircleIcon,
     ExclamationTriangleIcon,
-    CurrencyDollarIcon,
     EyeIcon,
 } from "@heroicons/react/24/outline";
 
 export default function Index({ payments, filters, stats }) {
     const [search, setSearch] = useState(filters.search || "");
-    const [type, setType] = useState(filters.type || "");
-    const [method, setMethod] = useState(filters.method || "");
     const [paymentFor, setPaymentFor] = useState(filters.payment_for || "");
 
     const handleSearch = (e) => {
         e.preventDefault();
         router.get(
             route("payments.index"),
-            { search, type, method, payment_for: paymentFor },
+            { search, payment_for: paymentFor },
             { preserveState: true }
         );
     };
@@ -71,18 +68,18 @@ export default function Index({ payments, filters, stats }) {
                     </Link>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg shadow-md p-6 border-2 border-blue-200">
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-xs font-semibold text-blue-700 uppercase">
-                                    Total Payments
+                                    Total Records
                                 </p>
                                 <p className="text-2xl font-bold text-blue-900 mt-1">
                                     {stats.total_payments}
                                 </p>
                             </div>
-                            <BanknotesIcon className="h-10 w-10 text-blue-400" />
+                            <DocumentTextIcon className="h-10 w-10 text-blue-400" />
                         </div>
                     </div>
 
@@ -90,18 +87,13 @@ export default function Index({ payments, filters, stats }) {
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-xs font-semibold text-green-700 uppercase">
-                                    Total Collected
+                                    Initial Payments
                                 </p>
                                 <p className="text-2xl font-bold text-green-900 mt-1">
-                                    ₱
-                                    {parseFloat(
-                                        stats.total_amount
-                                    ).toLocaleString("en-US", {
-                                        minimumFractionDigits: 2,
-                                    })}
+                                    {stats.initial_payments}
                                 </p>
                             </div>
-                            <CurrencyDollarIcon className="h-10 w-10 text-green-400" />
+                            <CheckCircleIcon className="h-10 w-10 text-green-400" />
                         </div>
                     </div>
 
@@ -109,37 +101,35 @@ export default function Index({ payments, filters, stats }) {
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-xs font-semibold text-orange-700 uppercase">
-                                    Total Balance
+                                    Balance Payments
                                 </p>
                                 <p className="text-2xl font-bold text-orange-900 mt-1">
-                                    ₱
-                                    {parseFloat(
-                                        stats.total_balance || 0
-                                    ).toLocaleString("en-US", {
-                                        minimumFractionDigits: 2,
-                                    })}
+                                    {stats.balance_payments}
                                 </p>
                             </div>
-                            <ExclamationTriangleIcon className="h-10 w-10 text-orange-400" />
-                        </div>
-                    </div>
-
-                    <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg shadow-md p-6 border-2 border-purple-200">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-xs font-semibold text-purple-700 uppercase">
-                                    Fully Paid
-                                </p>
-                                <p className="text-2xl font-bold text-purple-900 mt-1">
-                                    {stats.fully_paid_count}
-                                </p>
-                            </div>
-                            <CheckCircleIcon className="h-10 w-10 text-purple-400" />
+                            <ClockIcon className="h-10 w-10 text-orange-400" />
                         </div>
                     </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="bg-white rounded-lg shadow-md p-4 border-l-4 border-green-400">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-xs font-semibold text-gray-600 uppercase">
+                                    Fully Paid Records
+                                </p>
+                                <p className="text-xl font-bold text-gray-900 mt-1">
+                                    {stats.fully_paid_count}
+                                </p>
+                                <p className="text-xs text-gray-500 mt-1">
+                                    Complete payments
+                                </p>
+                            </div>
+                            <CheckCircleIcon className="h-8 w-8 text-green-400" />
+                        </div>
+                    </div>
+
                     <div className="bg-white rounded-lg shadow-md p-4 border-l-4 border-yellow-400">
                         <div className="flex items-center justify-between">
                             <div>
@@ -173,23 +163,6 @@ export default function Index({ payments, filters, stats }) {
                             <ExclamationTriangleIcon className="h-8 w-8 text-red-400" />
                         </div>
                     </div>
-
-                    <div className="bg-white rounded-lg shadow-md p-4 border-l-4 border-teal-400">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-xs font-semibold text-gray-600 uppercase">
-                                    Renewals
-                                </p>
-                                <p className="text-xl font-bold text-gray-900 mt-1">
-                                    {stats.renewal_payments}
-                                </p>
-                                <p className="text-xs text-gray-500 mt-1">
-                                    Completed renewals
-                                </p>
-                            </div>
-                            <CheckCircleIcon className="h-8 w-8 text-teal-400" />
-                        </div>
-                    </div>
                 </div>
 
                 <div className="bg-white rounded-xl shadow-md p-6">
@@ -215,8 +188,6 @@ export default function Index({ payments, filters, stats }) {
                             <option value="">All Payment Types</option>
                             <option value="initial">Initial</option>
                             <option value="balance">Balance</option>
-                            <option value="renewal">Renewal</option>
-                            <option value="penalty">Penalty</option>
                         </select>
                         <button
                             type="submit"
@@ -224,7 +195,7 @@ export default function Index({ payments, filters, stats }) {
                         >
                             Search
                         </button>
-                        {(search || type || method || paymentFor) && (
+                        {(search || paymentFor) && (
                             <Link
                                 href={route("payments.index")}
                                 className="px-6 py-2 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition"
@@ -392,7 +363,12 @@ export default function Index({ payments, filters, stats }) {
                                             <td className="px-6 py-4 whitespace-nowrap text-center">
                                                 <div className="flex justify-center space-x-2">
                                                     <Link
-                                                        href={route("deceased.payment-history", payment.deceased_record?.id)}
+                                                        href={route(
+                                                            "deceased.payment-history",
+                                                            payment
+                                                                .deceased_record
+                                                                ?.id
+                                                        )}
                                                         className="flex items-center px-3 py-2 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 transition"
                                                         title="View Payment History"
                                                     >

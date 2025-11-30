@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, usePage, router } from "@inertiajs/react";
 import {
     HomeIcon,
@@ -18,8 +18,10 @@ export default function Sidebar() {
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [expiringCount, setExpiringCount] = useState(0);
     const [expiringRecords, setExpiringRecords] = useState([]);
-    const [hoveredItemName, setHoveredItemName] = useState(null);
+    const [showTooltip, setShowTooltip] = useState(false);
     const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
+    const tooltipRef = useRef(null);
+    const badgeRef = useRef(null);
     const page = usePage();
     const { auth } = page.props;
 
@@ -61,6 +63,23 @@ export default function Sidebar() {
         
         const interval = setInterval(fetchExpiringRecords, 5 * 60 * 1000);
         return () => clearInterval(interval);
+    }, []);
+
+    // Close tooltip when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (
+                tooltipRef.current &&
+                !tooltipRef.current.contains(event.target) &&
+                badgeRef.current &&
+                !badgeRef.current.contains(event.target)
+            ) {
+                setShowTooltip(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
     const navigation = [
@@ -146,19 +165,18 @@ export default function Sidebar() {
         setShowLogoutModal(false);
     };
 
-    const handleBadgeMouseEnter = (e, itemName) => {
-        if (e.currentTarget && expiringRecords.length > 0) {
+    const handleBadgeClick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (expiringRecords.length > 0) {
             const rect = e.currentTarget.getBoundingClientRect();
             setTooltipPosition({
                 top: rect.top,
                 left: rect.right + 20,
             });
-            setHoveredItemName(itemName);
+            setShowTooltip(!showTooltip);
         }
-    };
-
-    const handleBadgeMouseLeave = () => {
-        setHoveredItemName(null);
     };
 
     return (
@@ -224,8 +242,6 @@ export default function Sidebar() {
                                         (currentRoute && currentRoute.startsWith(item.component));
                                 }
 
-                                const isHovered = hoveredItemName === item.name && item.badge;
-
                                 return (
                                     <div key={item.name} className="relative">
                                         <Link
@@ -242,9 +258,10 @@ export default function Sidebar() {
                                             
                                             {item.badge && (
                                                 <span 
-                                                    className="ml-2 inline-flex items-center justify-center px-2.5 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full animate-pulse relative cursor-help"
-                                                    onMouseEnter={(e) => handleBadgeMouseEnter(e, item.name)}
-                                                    onMouseLeave={handleBadgeMouseLeave}
+                                                    ref={badgeRef}
+                                                    className="ml-2 inline-flex items-center justify-center px-2.5 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full animate-pulse relative cursor-pointer hover:bg-red-700"
+                                                    onClick={handleBadgeClick}
+                                                    title="Click to view details"
                                                 >
                                                     {item.badge}
                                                     <span className="absolute inline-flex rounded-full h-3 w-3 bg-red-600 -top-1 -right-1 animate-ping"></span>
@@ -283,29 +300,44 @@ export default function Sidebar() {
                 </div>
             </div>
 
-            {/* Tooltip - Fixed Position */}
-            {hoveredItemName && expiringRecords.length > 0 && (
+            {/* Tooltip - Click to open, scrollable */}
+            {showTooltip && expiringRecords.length > 0 && (
                 <div 
-                    className="fixed w-96 bg-gray-950 text-white text-xs rounded-lg shadow-2xl p-4 border border-gray-700 z-50"
+                    ref={tooltipRef}
+                    className="fixed w-96 bg-gray-950 text-white text-xs rounded-lg shadow-2xl border border-gray-700 z-50"
                     style={{
-                        top: `${tooltipPosition.top}px`,
+                        top: `${Math.min(tooltipPosition.top, window.innerHeight - 500)}px`,
                         left: `${tooltipPosition.left}px`,
+                        maxHeight: '500px',
                     }}
-                    onMouseEnter={() => setHoveredItemName(hoveredItemName)}
-                    onMouseLeave={() => setHoveredItemName(null)}
                 >
-                    <div className="font-semibold mb-3 text-yellow-400 border-b border-gray-600 pb-2">
-                        🔔 Payment Renewal Alert ({expiringRecords.length})
+                    <div className="sticky top-0 bg-gray-950 p-4 border-b border-gray-700 rounded-t-lg z-10">
+                        <div className="flex items-center justify-between">
+                            <div className="font-semibold text-yellow-400">
+                                🔔 Payment Renewal Alert ({expiringRecords.length})
+                            </div>
+                            <button
+                                onClick={() => setShowTooltip(false)}
+                                className="text-gray-400 hover:text-white transition"
+                            >
+                                <XMarkIcon className="h-5 w-5" />
+                            </button>
+                        </div>
                     </div>
                     
-                    <div className="space-y-3 max-h-96 overflow-y-auto">
+                    <div className="p-4 space-y-3 overflow-y-auto" style={{ maxHeight: '400px' }}>
                         {expiringRecords.map((record, idx) => (
-                            <div key={idx} className="bg-gray-800 p-3 rounded border border-gray-600 hover:border-gray-500 transition">
+                            <Link
+                                key={idx}
+                                href={`/notices/create?deceased_id=${record.id}`}
+                                className="block bg-gray-800 p-3 rounded border border-gray-600 hover:border-yellow-500 hover:bg-gray-750 transition cursor-pointer"
+                                onClick={() => setShowTooltip(false)}
+                            >
                                 <p className="font-semibold text-yellow-300 mb-1">
                                     {record.fullname}
                                 </p>
                                 <p className="text-gray-300 text-xs mb-2">
-                                    🏺 Tomb #{record.tomb_number}
+                                    🏺 Tomb #{record.tomb_number} - {record.tomb_location}
                                 </p>
                                 
                                 {record.type === 'overdue' ? (
@@ -318,19 +350,33 @@ export default function Sidebar() {
                                     </div>
                                 )}
                                 
-                                <p className="text-gray-400 text-xs">
+                                <p className="text-gray-400 text-xs mb-1">
                                     📅 Due: {new Date(record.payment_due_date).toLocaleDateString('en-US', {
                                         year: 'numeric',
                                         month: 'short',
                                         day: 'numeric'
                                     })}
                                 </p>
-                            </div>
+                                
+                                {record.status_label && (
+                                    <p className={`text-xs font-medium ${
+                                        record.payment_status === 'paid' ? 'text-green-400' :
+                                        record.payment_status === 'partial' ? 'text-yellow-400' :
+                                        'text-red-400'
+                                    }`}>
+                                        💰 {record.status_label}
+                                    </p>
+                                )}
+                                
+                                <div className="mt-2 pt-2 border-t border-gray-700 text-blue-400 text-xs font-medium">
+                                    Click to send notice →
+                                </div>
+                            </Link>
                         ))}
                     </div>
                     
-                    <div className="text-xs text-gray-400 mt-3 pt-3 border-t border-gray-600 text-center">
-                        Click "Deceased Records" to manage
+                    <div className="sticky bottom-0 bg-gray-950 text-xs text-gray-400 p-3 border-t border-gray-700 text-center rounded-b-lg">
+                        Click any record to send notice • Click X or outside to close
                     </div>
                 </div>
             )}

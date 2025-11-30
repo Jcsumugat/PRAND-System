@@ -10,6 +10,7 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class PaymentRecordController extends Controller
 {
@@ -33,12 +34,12 @@ class PaymentRecordController extends Controller
 
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('receipt_number', 'like', "%{$search}%")
-                  ->orWhere('official_receipt_number', 'like', "%{$search}%")
-                  ->orWhereHas('deceasedRecord', function($q) use ($search) {
-                      $q->where('fullname', 'like', "%{$search}%");
-                  });
+                    ->orWhere('official_receipt_number', 'like', "%{$search}%")
+                    ->orWhereHas('deceasedRecord', function ($q) use ($search) {
+                        $q->where('fullname', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -46,13 +47,8 @@ class PaymentRecordController extends Controller
 
         $stats = [
             'total_payments' => PaymentRecord::count(),
-            'total_amount' => PaymentRecord::sum('amount'),
-            'initial_payments' => PaymentRecord::where('payment_type', 'initial')->count(),
-            'renewal_payments' => PaymentRecord::where('payment_type', 'renewal')->count(),
-            'pending_renewals' => DeceasedRecord::where('payment_status', 'pending')
-                ->whereNotNull('payment_due_date')
-                ->count(),
-            'total_balance' => DeceasedRecord::where('balance', '>', 0)->sum('balance'),
+            'initial_payments' => PaymentRecord::where('payment_for', 'initial')->count(),
+            'balance_payments' => PaymentRecord::where('payment_for', 'balance')->count(),
             'partial_payment_count' => DeceasedRecord::where('amount_paid', '>', 0)
                 ->where('is_fully_paid', false)
                 ->count(),
@@ -98,7 +94,7 @@ class PaymentRecordController extends Controller
         ]);
 
         DB::beginTransaction();
-        
+
         try {
             $deceased = DeceasedRecord::find($validated['deceased_record_id']);
 
@@ -116,16 +112,46 @@ class PaymentRecordController extends Controller
                 }
             }
 
+            // Calculate coverage dates based on date_of_burial
+            $coverageStartDate = null;
+            $coverageEndDate = null;
+            $coverageStatus = 'initial';
+
+            $newAmountPaid = $deceased->amount_paid + $validated['amount'];
+            $newBalance = $deceased->balance - $validated['amount'];
+            $isFullyPaid = $newBalance <= 0;
+
+            if (($validated['payment_for'] === 'initial' || $validated['payment_for'] === 'balance') && $isFullyPaid) {
+                // Use date_of_burial as the start of coverage
+                $coverageStartDate = Carbon::parse($deceased->date_of_burial);
+                $coverageEndDate = $coverageStartDate->copy()->addYears(5);
+                $coverageStatus = 'initial';
+            } elseif ($validated['payment_for'] === 'renewal' && $isFullyPaid) {
+                // For renewals, get the last coverage end date or use burial date
+                $lastPayment = PaymentRecord::where('deceased_record_id', $deceased->id)
+                    ->whereNotNull('coverage_end_date')
+                    ->orderBy('coverage_end_date', 'desc')
+                    ->first();
+
+                if ($lastPayment) {
+                    $coverageStartDate = Carbon::parse($lastPayment->coverage_end_date);
+                } else {
+                    $coverageStartDate = Carbon::parse($deceased->date_of_burial);
+                }
+                $coverageEndDate = $coverageStartDate->copy()->addYears(5);
+                $coverageStatus = 'renewal';
+            }
+
             $validated['receipt_number'] = 'RCP-' . date('Ymd') . '-' . strtoupper(Str::random(6));
             $validated['received_by'] = Auth::id();
             $validated['previous_balance'] = $deceased->balance;
+            $validated['coverage_status'] = $coverageStatus;
+            $validated['coverage_start_date'] = $coverageStartDate;
+            $validated['coverage_end_date'] = $coverageEndDate;
 
             $paymentRecord = PaymentRecord::create($validated);
 
             if ($validated['payment_for'] === 'initial' || $validated['payment_for'] === 'balance') {
-                $newAmountPaid = $deceased->amount_paid + $validated['amount'];
-                $newBalance = $deceased->balance - $validated['amount'];
-
                 $updateData = [
                     'amount_paid' => $newAmountPaid,
                     'balance' => max(0, $newBalance),
@@ -135,7 +161,7 @@ class PaymentRecordController extends Controller
                 if ($newBalance <= 0) {
                     $updateData['is_fully_paid'] = true;
                     $updateData['payment_status'] = 'paid';
-                    $updateData['payment_due_date'] = date('Y-m-d', strtotime($deceased->date_of_burial . ' +5 years'));
+                    $updateData['payment_due_date'] = $coverageEndDate;
                 } else {
                     $updateData['payment_status'] = 'pending';
                 }
@@ -145,26 +171,27 @@ class PaymentRecordController extends Controller
                 $paymentRecord->update([
                     'remaining_balance' => max(0, $newBalance)
                 ]);
-            } 
-            elseif ($validated['payment_type'] === 'renewal') {
+            } elseif ($validated['payment_type'] === 'renewal') {
                 if (!$deceased->is_fully_paid) {
                     return back()->withErrors(['error' => 'Cannot process renewal. Initial payment must be fully paid first.']);
                 }
 
-                $currentDueDate = $deceased->payment_due_date;
-                $newDueDate = date('Y-m-d', strtotime($currentDueDate . ' +5 years'));
-                
                 $deceased->update([
                     'payment_status' => 'paid',
-                    'payment_due_date' => $newDueDate,
+                    'payment_due_date' => $coverageEndDate,
                     'last_payment_date' => $validated['payment_date']
                 ]);
 
                 RenewalRecord::create([
                     'deceased_record_id' => $validated['deceased_record_id'],
                     'renewal_date' => $validated['payment_date'],
-                    'next_renewal_date' => $newDueDate,
+                    'next_renewal_date' => $coverageEndDate,
                     'renewal_fee' => $validated['amount'],
+                    'total_amount_due' => $validated['amount'],
+                    'amount_paid' => $validated['amount'],
+                    'balance' => 0,
+                    'is_fully_paid' => true,
+                    'payment_status' => 'paid',
                     'status' => 'active',
                     'processed_by' => Auth::id(),
                     'remarks' => $validated['remarks']
@@ -177,11 +204,10 @@ class PaymentRecordController extends Controller
             if ($deceased->balance > 0) {
                 $message .= ' | Remaining Balance: ₱' . number_format($deceased->balance, 2);
             } else {
-                $message .= ' | FULLY PAID - Coverage activated until ' . date('M d, Y', strtotime($deceased->payment_due_date));
+                $message .= ' | FULLY PAID - Coverage active until ' . date('M d, Y', strtotime($coverageEndDate));
             }
 
             return redirect()->route('payments.index')->with('success', $message);
-                
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->withErrors(['error' => 'Failed to record payment: ' . $e->getMessage()]);
@@ -246,21 +272,20 @@ class PaymentRecordController extends Controller
     public function destroy(PaymentRecord $payment)
     {
         DB::beginTransaction();
-        
+
         try {
             if ($payment->payment_type === 'renewal') {
                 RenewalRecord::where('deceased_record_id', $payment->deceased_record_id)
                     ->where('renewal_date', $payment->payment_date)
                     ->delete();
             }
-            
+
             $payment->delete();
-            
+
             DB::commit();
 
             return redirect()->route('payments.index')
                 ->with('success', 'Payment record deleted successfully.');
-                
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->withErrors(['error' => 'Failed to delete payment: ' . $e->getMessage()]);

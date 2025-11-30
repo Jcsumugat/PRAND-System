@@ -256,7 +256,7 @@ export default function Create({ deceasedRecords = [], selectedDeceased = null }
                                                         </div>
 
                                                         <p className="text-xs text-orange-800 mt-3">
-                                                            ⚠️ Coverage will only be activated after full payment is received. No automatic due dates or penalties for partial payments - staff will determine any penalties if needed.
+                                                            ⚠️ No automatic due dates or penalties for partial payments - staff will determine any penalties if needed.
                                                         </p>
                                                     </div>
                                                 </div>

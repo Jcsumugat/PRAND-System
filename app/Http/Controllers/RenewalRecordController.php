@@ -7,7 +7,7 @@ use App\Models\PaymentRecord;
 use App\Models\RenewalRecord;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use Illuminate\Support\Carbon;
+use Carbon\Carbon;
 
 class RenewalRecordController extends Controller
 {
@@ -56,29 +56,13 @@ class RenewalRecordController extends Controller
             'fully_paid_renewals' => RenewalRecord::where('is_fully_paid', true)->count(),
             'partial_payment_renewals' => RenewalRecord::where('payment_status', 'partial')->count(),
             'pending_renewals' => RenewalRecord::where('payment_status', 'pending')->count(),
+            // Coverage stats
+            'coverage_expiring_soon' => $this->getCoverageExpiringSoonCount(),
+            'coverage_expired' => $this->getCoverageExpiredCount(),
         ];
 
-        // Get records that need renewal
-        $needsRenewal = DeceasedRecord::where('is_fully_paid', true)
-            ->whereNotNull('payment_due_date')
-            ->where('payment_due_date', '<=', date('Y-m-d', strtotime('+2 months')))
-            ->orderBy('payment_due_date', 'asc')
-            ->get()
-            ->map(function($record) {
-                $daysUntil = Carbon::parse($record->payment_due_date)->diffInDays(Carbon::now(), false);
-                return [
-                    'id' => $record->id,
-                    'fullname' => $record->fullname,
-                    'tomb_number' => $record->tomb_number,
-                    'tomb_location' => $record->tomb_location,
-                    'next_of_kin_name' => $record->next_of_kin_name,
-                    'contact_number' => $record->contact_number,
-                    'payment_due_date' => $record->payment_due_date,
-                    'last_payment_date' => $record->last_payment_date,
-                    'days_until_due' => abs($daysUntil),
-                    'is_overdue' => $daysUntil > 0,
-                ];
-            });
+        // Get records that need renewal (based on burial date + 5 years)
+        $needsRenewal = $this->getNeedsRenewalRecords();
 
         return Inertia::render('RenewalRecords/Index', [ 
             'renewals' => $renewals,
@@ -86,5 +70,78 @@ class RenewalRecordController extends Controller
             'stats' => $stats,
             'needsRenewal' => $needsRenewal,
         ]);
+    }
+
+    private function getCoverageExpiringSoonCount()
+    {
+        $deceasedRecords = DeceasedRecord::where('is_fully_paid', true)
+            ->whereNotNull('date_of_burial')
+            ->get();
+
+        $count = 0;
+        foreach ($deceasedRecords as $deceased) {
+            $burialDate = Carbon::parse($deceased->date_of_burial);
+            $coverageEndDate = $burialDate->copy()->addYears(5);
+            $daysUntilExpiry = Carbon::now()->diffInDays($coverageEndDate, false);
+
+            if ($daysUntilExpiry > 0 && $daysUntilExpiry <= 60) {
+                $count++;
+            }
+        }
+
+        return $count;
+    }
+
+    private function getCoverageExpiredCount()
+    {
+        $deceasedRecords = DeceasedRecord::where('is_fully_paid', true)
+            ->whereNotNull('date_of_burial')
+            ->get();
+
+        $count = 0;
+        foreach ($deceasedRecords as $deceased) {
+            $burialDate = Carbon::parse($deceased->date_of_burial);
+            $coverageEndDate = $burialDate->copy()->addYears(5);
+
+            if ($coverageEndDate->isPast()) {
+                $count++;
+            }
+        }
+
+        return $count;
+    }
+
+    private function getNeedsRenewalRecords()
+    {
+        $deceasedRecords = DeceasedRecord::where('is_fully_paid', true)
+            ->whereNotNull('date_of_burial')
+            ->get();
+
+        $needsRenewal = collect();
+
+        foreach ($deceasedRecords as $deceased) {
+            $burialDate = Carbon::parse($deceased->date_of_burial);
+            $coverageEndDate = $burialDate->copy()->addYears(5);
+            $daysUntilExpiry = Carbon::now()->diffInDays($coverageEndDate, false);
+
+            // Include if expired or expiring within 2 months (60 days)
+            if ($daysUntilExpiry <= 60) {
+                $needsRenewal->push([
+                    'id' => $deceased->id,
+                    'fullname' => $deceased->fullname,
+                    'tomb_number' => $deceased->tomb_number,
+                    'tomb_location' => $deceased->tomb_location,
+                    'next_of_kin_name' => $deceased->next_of_kin_name,
+                    'contact_number' => $deceased->contact_number,
+                    'payment_due_date' => $coverageEndDate->format('Y-m-d'),
+                    'last_payment_date' => $deceased->last_payment_date,
+                    'days_until_due' => abs($daysUntilExpiry),
+                    'is_overdue' => $daysUntilExpiry < 0,
+                    'burial_date' => $deceased->date_of_burial,
+                ]);
+            }
+        }
+
+        return $needsRenewal->sortBy('payment_due_date')->values();
     }
 }

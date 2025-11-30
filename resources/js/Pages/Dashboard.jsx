@@ -1,13 +1,10 @@
-import { useState, useEffect } from "react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link } from "@inertiajs/react";
 import {
-    BellIcon,
-    ExclamationTriangleIcon,
     ClockIcon,
 } from "@heroicons/react/24/outline";
 
-export default function Dashboard({ stats = {}, upcomingRenewals = [] }) {
+export default function Dashboard({ stats = {} }) {
     const {
         totalRecords = 0,
         fullyPaidRecords = 0,
@@ -16,77 +13,15 @@ export default function Dashboard({ stats = {}, upcomingRenewals = [] }) {
         totalCollected = 0,
         totalBalance = 0,
         paidThisMonth = 0,
-        upcomingRenewals: upcomingRenewalsCount = 0,
-        overduePayments = 0,
         totalRenewals = 0,
         activeRenewals = 0,
     } = stats;
-
-    const getAlertColor = (alertLevel) => {
-        switch (alertLevel) {
-            case "critical":
-                return "bg-red-100 text-red-800 border-red-300";
-            case "warning":
-                return "bg-yellow-100 text-yellow-800 border-yellow-300";
-            default:
-                return "bg-blue-100 text-blue-800 border-blue-300";
-        }
-    };
 
     return (
         <AuthenticatedLayout>
             <Head title="PRAND - Home" />
 
             <div className="space-y-6">
-                {upcomingRenewalsCount > 0 && (
-                    <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-300 rounded-xl p-6">
-                        <div className="flex items-start gap-4">
-                            <BellIcon className="h-8 w-8 text-yellow-600 flex-shrink-0 mt-1" />
-                            <div className="flex-1">
-                                <h3 className="text-xl font-bold text-yellow-900 mb-2">
-                                    Renewal Alerts
-                                </h3>
-                                <p className="text-yellow-800 mb-4">
-                                    You have{" "}
-                                    <strong>{upcomingRenewalsCount}</strong>{" "}
-                                    record(s) approaching their renewal date
-                                    within the next 2 months.
-                                </p>
-                                <Link
-                                    href="/renewals"
-                                    className="inline-flex items-center px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition"
-                                >
-                                    View Renewal Records
-                                </Link>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {overduePayments > 0 && (
-                    <div className="bg-gradient-to-r from-red-50 to-pink-50 border-2 border-red-300 rounded-xl p-6">
-                        <div className="flex items-start gap-4">
-                            <ExclamationTriangleIcon className="h-8 w-8 text-red-600 flex-shrink-0 mt-1" />
-                            <div className="flex-1">
-                                <h3 className="text-xl font-bold text-red-900 mb-2">
-                                    Overdue Payments Alert
-                                </h3>
-                                <p className="text-red-800 mb-4">
-                                    You have <strong>{overduePayments}</strong>{" "}
-                                    overdue payment(s) that require immediate
-                                    attention.
-                                </p>
-                                <Link
-                                    href="/deceased"
-                                    className="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
-                                >
-                                    View Overdue Records
-                                </Link>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
                 <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-lg shadow-lg p-8 text-white">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
                         <div>
@@ -230,21 +165,21 @@ export default function Dashboard({ stats = {}, upcomingRenewals = [] }) {
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-lg shadow-lg p-6 border-l-4 border-yellow-500 hover:shadow-xl transition">
+                    <div className="bg-white rounded-lg shadow-lg p-6 border-l-4 border-orange-500 hover:shadow-xl transition">
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm font-medium text-gray-600">
-                                    Upcoming Renewals
+                                    Partial Payment
                                 </p>
                                 <p className="text-3xl font-bold text-gray-900 mt-2">
-                                    {upcomingRenewalsCount}
+                                    {partialPayments}
                                 </p>
                                 <p className="text-xs text-gray-500 mt-1">
-                                    Within 2 months
+                                    Incomplete payments
                                 </p>
                             </div>
-                            <div className="p-3 bg-yellow-100 rounded-lg">
-                                <ClockIcon className="w-8 h-8 text-yellow-600" />
+                            <div className="p-3 bg-orange-100 rounded-lg">
+                                <ClockIcon className="w-8 h-8 text-orange-600" />
                             </div>
                         </div>
                     </div>
@@ -253,17 +188,29 @@ export default function Dashboard({ stats = {}, upcomingRenewals = [] }) {
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm font-medium text-gray-600">
-                                    Overdue
+                                    No Payment
                                 </p>
                                 <p className="text-3xl font-bold text-gray-900 mt-2">
-                                    {overduePayments}
+                                    {noPayment}
                                 </p>
                                 <p className="text-xs text-gray-500 mt-1">
-                                    Past due date
+                                    Pending payment
                                 </p>
                             </div>
                             <div className="p-3 bg-red-100 rounded-lg">
-                                <ExclamationTriangleIcon className="w-8 h-8 text-red-600" />
+                                <svg
+                                    className="w-8 h-8 text-red-600"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                    />
+                                </svg>
                             </div>
                         </div>
                     </div>
@@ -358,48 +305,6 @@ export default function Dashboard({ stats = {}, upcomingRenewals = [] }) {
                         </div>
                     </div>
                 </div>
-
-                {upcomingRenewals.length > 0 && (
-                    <div className="bg-white rounded-xl shadow-md p-6">
-                        <h3 className="text-xl font-semibold text-gray-900 mb-4">
-                            Upcoming Renewals (Next 2 Months)
-                        </h3>
-                        <div className="space-y-3">
-                            {upcomingRenewals.map((renewal) => (
-                                <div
-                                    key={renewal.id}
-                                    className={`flex items-center justify-between p-4 rounded-lg border-2 ${getAlertColor(
-                                        renewal.alert_level
-                                    )}`}
-                                >
-                                    <div>
-                                        <p className="font-semibold">
-                                            {renewal.fullname}
-                                        </p>
-                                        <p className="text-sm">
-                                            Tomb: {renewal.tomb_number}
-                                        </p>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="font-bold">
-                                            {renewal.days_until_renewal} days
-                                        </p>
-                                        <p className="text-xs">
-                                            Due:{" "}
-                                            {new Date(
-                                                renewal.payment_due_date
-                                            ).toLocaleDateString("en-US", {
-                                                month: "short",
-                                                day: "2-digit",
-                                                year: "numeric",
-                                            })}
-                                        </p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
 
                 <div className="bg-white rounded-xl shadow-md p-8">
                     <h3 className="text-2xl font-semibold text-gray-900 mb-6">

@@ -6,6 +6,7 @@ use App\Models\DeceasedRecord;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class DeceasedRecordController extends Controller
 {
@@ -109,13 +110,21 @@ class DeceasedRecordController extends Controller
             'birthday' => 'required|date|before:today',
             'date_of_death' => 'required|date|after_or_equal:birthday|before_or_equal:today',
             'date_of_burial' => 'required|date|after_or_equal:date_of_death|before_or_equal:today',
-            'tomb_number' => 'required|string|unique:deceased_records,tomb_number',
             'tomb_location' => 'required|string|max:255',
+            'tomb_number' => [
+                'required',
+                'string',
+                Rule::unique('deceased_records', 'tomb_number')
+                    ->where('tomb_location', $request->tomb_location)
+                    ->whereNull('deleted_at')
+            ],
             'next_of_kin_name' => 'required|string|max:255',
             'next_of_kin_relationship' => 'nullable|string|max:100',
             'contact_number' => 'required|string|max:20',
             'email' => 'nullable|email|max:255',
             'address' => 'nullable|string',
+        ], [
+            'tomb_number.unique' => 'This tomb number is already taken in the selected location.'
         ]);
 
         $validated['payment_status'] = 'pending';
@@ -140,14 +149,23 @@ class DeceasedRecordController extends Controller
             'birthday' => 'required|date|before:today',
             'date_of_death' => 'required|date|after_or_equal:birthday|before_or_equal:today',
             'date_of_burial' => 'required|date|after_or_equal:date_of_death|before_or_equal:today',
-            'tomb_number' => 'required|string|unique:deceased_records,tomb_number,' . $deceased->id,
             'tomb_location' => 'required|string|max:255',
+            'tomb_number' => [
+                'required',
+                'string',
+                Rule::unique('deceased_records', 'tomb_number')
+                    ->where('tomb_location', $request->tomb_location)
+                    ->whereNull('deleted_at')
+                    ->ignore($deceased->id)
+            ],
             'next_of_kin_name' => 'required|string|max:255',
             'next_of_kin_relationship' => 'nullable|string|max:100',
             'contact_number' => 'required|string|max:20',
             'email' => 'nullable|email|max:255',
             'address' => 'nullable|string',
             'payment_due_date' => 'nullable|date',
+        ], [
+            'tomb_number.unique' => 'This tomb number is already taken in the selected location.'
         ]);
 
         $validated['updated_by'] = Auth::id();

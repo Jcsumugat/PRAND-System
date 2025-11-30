@@ -275,17 +275,6 @@
                         </span>
                     </button>
                 </form>
-
-                <!-- Register Link -->
-                <div class="mt-8 text-center">
-                    <p class="text-sm text-gray-600">
-                        Don't have an account?
-                        <a href="/register"
-                            class="font-bold text-indigo-600 hover:text-purple-600 transition-colors underline decoration-2 underline-offset-2">
-                            Create one here
-                        </a>
-                    </p>
-                </div>
             </div>
 
             <!-- Footer -->

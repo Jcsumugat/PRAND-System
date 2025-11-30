@@ -5,7 +5,7 @@ import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
-import { ArrowLeftIcon, MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon, MagnifyingGlassIcon, XMarkIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 
 export default function Create({ deceasedRecords = [], selectedDeceased = null }) {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -13,6 +13,7 @@ export default function Create({ deceasedRecords = [], selectedDeceased = null }
         amount: '',
         payment_date: new Date().toISOString().split('T')[0],
         payment_type: 'initial',
+        payment_for: selectedDeceased?.balance > 0 ? 'balance' : 'initial',
         payment_method: 'cash',
         official_receipt_number: '',
         remarks: '',
@@ -22,7 +23,6 @@ export default function Create({ deceasedRecords = [], selectedDeceased = null }
     const [showDropdown, setShowDropdown] = useState(false);
     const [selectedRecord, setSelectedRecord] = useState(selectedDeceased);
 
-    // Filter deceased records based on search query
     const filteredRecords = deceasedRecords.filter(record => {
         const searchLower = searchQuery.toLowerCase();
         return (
@@ -35,6 +35,15 @@ export default function Create({ deceasedRecords = [], selectedDeceased = null }
     const handleSelectRecord = (record) => {
         setSelectedRecord(record);
         setData('deceased_record_id', record.id);
+        
+        if (record.balance > 0) {
+            setData('payment_for', 'balance');
+            setData('payment_type', 'initial');
+        } else if (record.is_fully_paid) {
+            setData('payment_for', 'renewal');
+            setData('payment_type', 'renewal');
+        }
+        
         setSearchQuery(record.fullname);
         setShowDropdown(false);
     };
@@ -57,12 +66,16 @@ export default function Create({ deceasedRecords = [], selectedDeceased = null }
         });
     };
 
+    const remainingBalance = selectedRecord?.balance || 0;
+    const amountPaid = selectedRecord?.amount_paid || 0;
+    const totalDue = selectedRecord?.total_amount_due || 5000;
+    const paymentProgress = totalDue > 0 ? (amountPaid / totalDue) * 100 : 0;
+
     return (
         <AuthenticatedLayout>
             <Head title="Record Payment" />
 
             <div className="max-w-4xl mx-auto">
-                {/* Header */}
                 <div className="bg-gradient-to-r from-green-200 to-emerald-200 rounded-xl shadow-md p-6 mb-6">
                     <div className="flex items-center justify-between">
                         <div>
@@ -79,17 +92,14 @@ export default function Create({ deceasedRecords = [], selectedDeceased = null }
                     </div>
                 </div>
 
-                {/* Form Card */}
                 <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl shadow-lg p-8">
                     <form onSubmit={handleSubmit} className="space-y-6">
-                        {/* Deceased Information Section */}
                         <div className="bg-white rounded-lg p-6 shadow-sm">
                             <h3 className="text-lg font-semibold text-green-700 mb-4 border-b pb-2">
                                 DECEASED INFORMATION
                             </h3>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {/* Deceased Record Search */}
                                 <div className="md:col-span-2">
                                     <InputLabel htmlFor="deceased_search" value="Search Deceased *" className="text-gray-700 font-semibold" />
                                     <div className="relative mt-1">
@@ -119,7 +129,6 @@ export default function Create({ deceasedRecords = [], selectedDeceased = null }
                                             )}
                                         </div>
 
-                                        {/* Dropdown Results */}
                                         {showDropdown && searchQuery && (
                                             <div className="absolute z-10 w-full mt-1 bg-white border border-green-200 rounded-md shadow-lg max-h-60 overflow-auto">
                                                 {filteredRecords.length > 0 ? (
@@ -134,13 +143,18 @@ export default function Create({ deceasedRecords = [], selectedDeceased = null }
                                                                 <div>
                                                                     <p className="font-semibold text-gray-900">{record.fullname}</p>
                                                                     <p className="text-sm text-gray-600">Tomb: {record.tomb_number}</p>
+                                                                    {record.balance > 0 && (
+                                                                        <p className="text-xs text-orange-600 font-semibold mt-1">
+                                                                            Balance: ₱{parseFloat(record.balance).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                                                        </p>
+                                                                    )}
                                                                 </div>
                                                                 <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                                                                    record.payment_status === 'paid' ? 'bg-green-100 text-green-800' :
-                                                                    record.payment_status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                                                    record.is_fully_paid ? 'bg-green-100 text-green-800' :
+                                                                    record.amount_paid > 0 ? 'bg-yellow-100 text-yellow-800' :
                                                                     'bg-red-100 text-red-800'
                                                                 }`}>
-                                                                    {record.payment_status}
+                                                                    {record.is_fully_paid ? 'Fully Paid' : record.amount_paid > 0 ? 'Partial' : 'Pending'}
                                                                 </span>
                                                             </div>
                                                         </button>
@@ -159,7 +173,6 @@ export default function Create({ deceasedRecords = [], selectedDeceased = null }
                                     </p>
                                 </div>
 
-                                {/* Display Selected Deceased Info */}
                                 {selectedRecord && (
                                     <>
                                         <div className="md:col-span-2 bg-green-50 border-2 border-green-200 rounded-lg p-4">
@@ -197,35 +210,77 @@ export default function Create({ deceasedRecords = [], selectedDeceased = null }
                                                         Payment Status
                                                     </label>
                                                     <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                                        selectedRecord.payment_status === 'paid' ? 'bg-green-100 text-green-800' :
-                                                        selectedRecord.payment_status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                                        selectedRecord.is_fully_paid ? 'bg-green-100 text-green-800' :
+                                                        selectedRecord.amount_paid > 0 ? 'bg-yellow-100 text-yellow-800' :
                                                         'bg-red-100 text-red-800'
                                                     }`}>
-                                                        {selectedRecord.payment_status.charAt(0).toUpperCase() + selectedRecord.payment_status.slice(1)}
+                                                        {selectedRecord.is_fully_paid ? 'Fully Paid' : selectedRecord.amount_paid > 0 ? 'Partial Payment' : 'Pending'}
                                                     </span>
                                                 </div>
                                             </div>
                                         </div>
+
+                                        {remainingBalance > 0 && (
+                                            <div className="md:col-span-2 bg-gradient-to-r from-orange-50 to-yellow-50 border-2 border-orange-300 rounded-lg p-4">
+                                                <div className="flex items-start gap-3">
+                                                    <ExclamationTriangleIcon className="h-6 w-6 text-orange-600 flex-shrink-0" />
+                                                    <div className="flex-1">
+                                                        <h4 className="font-bold text-orange-900 mb-3">Balance Payment Required</h4>
+                                                        
+                                                        <div className="mb-3">
+                                                            <div className="flex justify-between text-sm mb-1">
+                                                                <span className="text-orange-800 font-semibold">Payment Progress</span>
+                                                                <span className="text-orange-900 font-bold">{paymentProgress.toFixed(1)}%</span>
+                                                            </div>
+                                                            <div className="w-full bg-orange-200 rounded-full h-3">
+                                                                <div 
+                                                                    className="bg-gradient-to-r from-green-500 to-emerald-500 h-3 rounded-full transition-all duration-300"
+                                                                    style={{ width: `${paymentProgress}%` }}
+                                                                ></div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="grid grid-cols-3 gap-3 text-sm">
+                                                            <div className="bg-white rounded p-2">
+                                                                <p className="text-xs text-gray-600">Total Due</p>
+                                                                <p className="font-bold text-gray-900">₱{totalDue.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+                                                            </div>
+                                                            <div className="bg-white rounded p-2">
+                                                                <p className="text-xs text-gray-600">Paid</p>
+                                                                <p className="font-bold text-green-700">₱{amountPaid.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+                                                            </div>
+                                                            <div className="bg-white rounded p-2">
+                                                                <p className="text-xs text-gray-600">Balance</p>
+                                                                <p className="font-bold text-orange-700">₱{remainingBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+                                                            </div>
+                                                        </div>
+
+                                                        <p className="text-xs text-orange-800 mt-3">
+                                                            ⚠️ Coverage will only be activated after full payment is received. No automatic due dates or penalties for partial payments - staff will determine any penalties if needed.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
                                     </>
                                 )}
                             </div>
                         </div>
 
-                        {/* Payment Information Section */}
                         <div className="bg-white rounded-lg p-6 shadow-sm">
                             <h3 className="text-lg font-semibold text-green-700 mb-4 border-b pb-2">
                                 PAYMENT DETAILS
                             </h3>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {/* Amount */}
                                 <div>
                                     <InputLabel htmlFor="amount" value="Amount (₱) *" className="text-gray-700 font-semibold" />
                                     <TextInput
                                         id="amount"
                                         type="number"
                                         step="0.01"
-                                        min="0"
+                                        min={selectedRecord?.amount_paid === 0 ? "2500" : "0.01"}
+                                        max={remainingBalance > 0 ? remainingBalance : undefined}
                                         value={data.amount}
                                         className="mt-1 block w-full bg-green-50 border-green-200 focus:border-green-500 focus:ring-green-500"
                                         onChange={(e) => setData('amount', e.target.value)}
@@ -233,9 +288,16 @@ export default function Create({ deceasedRecords = [], selectedDeceased = null }
                                         required
                                     />
                                     <InputError message={errors.amount} className="mt-2" />
+                                    {remainingBalance > 0 && (
+                                        <p className="mt-1 text-xs text-orange-600 font-semibold">
+                                            {selectedRecord?.amount_paid === 0 
+                                                ? `Min Down Payment: ₱2,500.00 (50%) | Max: ₱${remainingBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
+                                                : `Min: ₱0.01 | Max: ₱${remainingBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
+                                            }
+                                        </p>
+                                    )}
                                 </div>
 
-                                {/* Payment Date */}
                                 <div>
                                     <InputLabel htmlFor="payment_date" value="Payment Date *" className="text-gray-700 font-semibold" />
                                     <TextInput
@@ -249,7 +311,29 @@ export default function Create({ deceasedRecords = [], selectedDeceased = null }
                                     <InputError message={errors.payment_date} className="mt-2" />
                                 </div>
 
-                                {/* Payment Type */}
+                                <div>
+                                    <InputLabel htmlFor="payment_for" value="Payment For *" className="text-gray-700 font-semibold" />
+                                    <select
+                                        id="payment_for"
+                                        value={data.payment_for}
+                                        className="mt-1 block w-full bg-green-50 border border-green-200 rounded-md shadow-sm focus:border-green-500 focus:ring-green-500 px-3 py-2"
+                                        onChange={(e) => setData('payment_for', e.target.value)}
+                                        required
+                                        disabled={remainingBalance > 0}
+                                    >
+                                        {remainingBalance > 0 ? (
+                                            <option value="balance">Balance Payment</option>
+                                        ) : (
+                                            <>
+                                                <option value="initial">Initial Payment</option>
+                                                <option value="renewal">Renewal Payment</option>
+                                                <option value="penalty">Penalty Payment</option>
+                                            </>
+                                        )}
+                                    </select>
+                                    <InputError message={errors.payment_for} className="mt-2" />
+                                </div>
+
                                 <div>
                                     <InputLabel htmlFor="payment_type" value="Payment Type *" className="text-gray-700 font-semibold" />
                                     <select
@@ -266,7 +350,6 @@ export default function Create({ deceasedRecords = [], selectedDeceased = null }
                                     <InputError message={errors.payment_type} className="mt-2" />
                                 </div>
 
-                                {/* Payment Method - Cash Only (Read-only) */}
                                 <div>
                                     <InputLabel htmlFor="payment_method" value="Payment Method *" className="text-gray-700 font-semibold" />
                                     <div className="mt-1 block w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm px-3 py-2">
@@ -279,7 +362,6 @@ export default function Create({ deceasedRecords = [], selectedDeceased = null }
                                     <InputError message={errors.payment_method} className="mt-2" />
                                 </div>
 
-                                {/* Official Receipt Number */}
                                 <div>
                                     <InputLabel htmlFor="official_receipt_number" value="Official Receipt Number (Optional)" className="text-gray-700 font-semibold" />
                                     <TextInput
@@ -293,7 +375,6 @@ export default function Create({ deceasedRecords = [], selectedDeceased = null }
                                     <InputError message={errors.official_receipt_number} className="mt-2" />
                                 </div>
 
-                                {/* Remarks */}
                                 <div className="md:col-span-2">
                                     <InputLabel htmlFor="remarks" value="Remarks (Optional)" className="text-gray-700 font-semibold" />
                                     <textarea
@@ -309,7 +390,6 @@ export default function Create({ deceasedRecords = [], selectedDeceased = null }
                             </div>
                         </div>
 
-                        {/* Payment Summary */}
                         <div className="bg-gradient-to-r from-green-100 to-emerald-100 rounded-lg p-6 border-2 border-green-300">
                             <h4 className="text-lg font-semibold text-green-900 mb-4">Payment Summary</h4>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -322,7 +402,7 @@ export default function Create({ deceasedRecords = [], selectedDeceased = null }
                                 <div>
                                     <p className="text-xs text-green-700 font-semibold uppercase">Type</p>
                                     <p className="text-sm font-bold text-green-900 mt-1 capitalize">
-                                        {data.payment_type}
+                                        {data.payment_for}
                                     </p>
                                 </div>
                                 <div>
@@ -335,14 +415,13 @@ export default function Create({ deceasedRecords = [], selectedDeceased = null }
                                         {new Date(data.payment_date).toLocaleDateString('en-US', {
                                             month: 'short',
                                             day: '2-digit',
-                                            year: '2-digit'
+                                            year: 'numeric'
                                         })}
                                     </p>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Action Buttons */}
                         <div className="flex items-center justify-end space-x-4 pt-4">
                             <Link
                                 href="/payments"

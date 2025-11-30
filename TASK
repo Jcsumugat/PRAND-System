@@ -40,3 +40,22 @@ Autofill Next Renewal Date to 5 years
 
 📍20 Days before renewal dapat ma notif sa system nga rapit lmng ang renewal ka pantyon ka Patay ngaya para maka advance send ka notice.     
 */
+
+
+📌
+//Ang sa Tomb number dapat my nka specific number Kong available or indi
+📌
+//dapat nka recent Kong magsave
+📌 
+//Ma ka full payment kag balance
+📌
+//Ang sa payment Jc hw dapat my date Kong kan o nagbayad para ma detect na mag overdue.. dba wra toh last time nag 'Overdue'.
+📌
+//Ang sa notice distribution ang sa Massage dapat E indicate ang ngaran ka patay
+📌 
+//bul on nlng ang pending
+📌
+//Kag ang sa user sara nlng ka account e bilin
+
+
+i want to add an icon after Tomb Number label that when hovered it will display the available and taken tomb numbers, up to 100 maximum per section like for North East only 100 tombs can be selected. heres my current database, controller and Create.jsx

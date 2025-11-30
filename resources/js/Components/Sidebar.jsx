@@ -108,7 +108,7 @@ export default function Sidebar() {
             icon: MapIcon,
         },
         {
-            name: "Users",
+            name: "User Profile ",
             href: "/employers",
             component: "Employers",
             icon: UsersIcon,

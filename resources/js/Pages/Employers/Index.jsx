@@ -140,7 +140,7 @@ export default function Index({ employers = [] }) {
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
                             <h1 className="text-2xl font-bold text-gray-900">
-                                Employers
+                                Manage Account
                             </h1>
                             <p className="mt-1 text-sm text-gray-600">
                                 Manage system user accounts
@@ -151,7 +151,7 @@ export default function Index({ employers = [] }) {
                             className="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-medium"
                         >
                             <PlusIcon className="h-5 w-5 mr-2" />
-                            Add Employer
+                            Add User
                         </button>
                     </div>
                 </div>

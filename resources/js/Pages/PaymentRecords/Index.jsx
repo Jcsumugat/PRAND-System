@@ -2,25 +2,28 @@ import { useState } from "react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link, router } from "@inertiajs/react";
 import {
-    PencilIcon,
     TrashIcon,
     MagnifyingGlassIcon,
     PlusIcon,
     BanknotesIcon,
     ClockIcon,
     CheckCircleIcon,
+    ExclamationTriangleIcon,
+    CurrencyDollarIcon,
+    EyeIcon,
 } from "@heroicons/react/24/outline";
 
 export default function Index({ payments, filters, stats }) {
     const [search, setSearch] = useState(filters.search || "");
     const [type, setType] = useState(filters.type || "");
     const [method, setMethod] = useState(filters.method || "");
+    const [paymentFor, setPaymentFor] = useState(filters.payment_for || "");
 
     const handleSearch = (e) => {
         e.preventDefault();
         router.get(
             route("payments.index"),
-            { search, type, method },
+            { search, type, method, payment_for: paymentFor },
             { preserveState: true }
         );
     };
@@ -35,23 +38,14 @@ export default function Index({ payments, filters, stats }) {
         }
     };
 
-    const getTypeBadge = (type) => {
+    const getPaymentForBadge = (paymentFor) => {
         const badges = {
             initial: "bg-blue-100 text-blue-800",
             renewal: "bg-green-100 text-green-800",
+            balance: "bg-orange-100 text-orange-800",
             penalty: "bg-red-100 text-red-800",
         };
-        return badges[type] || "bg-gray-100 text-gray-800";
-    };
-
-    const getMethodBadge = (method) => {
-        const badges = {
-            cash: "bg-green-100 text-green-800",
-            gcash: "bg-blue-100 text-blue-800",
-            bank_transfer: "bg-purple-100 text-purple-800",
-            check: "bg-yellow-100 text-yellow-800",
-        };
-        return badges[method] || "bg-gray-100 text-gray-800";
+        return badges[paymentFor] || "bg-gray-100 text-gray-800";
     };
 
     return (
@@ -59,14 +53,13 @@ export default function Index({ payments, filters, stats }) {
             <Head title="Payment Records" />
 
             <div className="space-y-6">
-                {/* Header */}
                 <div className="flex justify-between items-center">
                     <div>
                         <h2 className="text-2xl font-bold text-gray-800">
                             PAYMENT RECORDS
                         </h2>
                         <p className="text-gray-600 mt-1">
-                            Manage all payment transactions (₱5,000 for 5 years)
+                            Manage all payment transactions
                         </p>
                     </div>
                     <Link
@@ -78,13 +71,16 @@ export default function Index({ payments, filters, stats }) {
                     </Link>
                 </div>
 
-                {/* Statistics Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg shadow-md p-6 border-2 border-blue-200">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-xs font-semibold text-blue-700 uppercase">Total Payments</p>
-                                <p className="text-2xl font-bold text-blue-900 mt-1">{stats.total_payments}</p>
+                                <p className="text-xs font-semibold text-blue-700 uppercase">
+                                    Total Payments
+                                </p>
+                                <p className="text-2xl font-bold text-blue-900 mt-1">
+                                    {stats.total_payments}
+                                </p>
                             </div>
                             <BanknotesIcon className="h-10 w-10 text-blue-400" />
                         </div>
@@ -93,47 +89,109 @@ export default function Index({ payments, filters, stats }) {
                     <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg shadow-md p-6 border-2 border-green-200">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-xs font-semibold text-green-700 uppercase">Total Amount</p>
+                                <p className="text-xs font-semibold text-green-700 uppercase">
+                                    Total Collected
+                                </p>
                                 <p className="text-2xl font-bold text-green-900 mt-1">
-                                    ₱{parseFloat(stats.total_amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                    ₱
+                                    {parseFloat(
+                                        stats.total_amount
+                                    ).toLocaleString("en-US", {
+                                        minimumFractionDigits: 2,
+                                    })}
                                 </p>
                             </div>
-                            <BanknotesIcon className="h-10 w-10 text-green-400" />
-                        </div>
-                    </div>
-
-                    <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg shadow-md p-6 border-2 border-purple-200">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-xs font-semibold text-purple-700 uppercase">Initial Payments</p>
-                                <p className="text-2xl font-bold text-purple-900 mt-1">{stats.initial_payments}</p>
-                            </div>
-                            <CheckCircleIcon className="h-10 w-10 text-purple-400" />
-                        </div>
-                    </div>
-
-                    <div className="bg-gradient-to-br from-teal-50 to-teal-100 rounded-lg shadow-md p-6 border-2 border-teal-200">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-xs font-semibold text-teal-700 uppercase">Renewal Payments</p>
-                                <p className="text-2xl font-bold text-teal-900 mt-1">{stats.renewal_payments}</p>
-                            </div>
-                            <CheckCircleIcon className="h-10 w-10 text-teal-400" />
+                            <CurrencyDollarIcon className="h-10 w-10 text-green-400" />
                         </div>
                     </div>
 
                     <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg shadow-md p-6 border-2 border-orange-200">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-xs font-semibold text-orange-700 uppercase">Pending Renewals</p>
-                                <p className="text-2xl font-bold text-orange-900 mt-1">{stats.pending_renewals}</p>
+                                <p className="text-xs font-semibold text-orange-700 uppercase">
+                                    Total Balance
+                                </p>
+                                <p className="text-2xl font-bold text-orange-900 mt-1">
+                                    ₱
+                                    {parseFloat(
+                                        stats.total_balance || 0
+                                    ).toLocaleString("en-US", {
+                                        minimumFractionDigits: 2,
+                                    })}
+                                </p>
                             </div>
-                            <ClockIcon className="h-10 w-10 text-orange-400" />
+                            <ExclamationTriangleIcon className="h-10 w-10 text-orange-400" />
+                        </div>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg shadow-md p-6 border-2 border-purple-200">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-xs font-semibold text-purple-700 uppercase">
+                                    Fully Paid
+                                </p>
+                                <p className="text-2xl font-bold text-purple-900 mt-1">
+                                    {stats.fully_paid_count}
+                                </p>
+                            </div>
+                            <CheckCircleIcon className="h-10 w-10 text-purple-400" />
                         </div>
                     </div>
                 </div>
 
-                {/* Search and Filter */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="bg-white rounded-lg shadow-md p-4 border-l-4 border-yellow-400">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-xs font-semibold text-gray-600 uppercase">
+                                    Partial Payments
+                                </p>
+                                <p className="text-xl font-bold text-gray-900 mt-1">
+                                    {stats.partial_payment_count}
+                                </p>
+                                <p className="text-xs text-gray-500 mt-1">
+                                    Records with balance
+                                </p>
+                            </div>
+                            <ClockIcon className="h-8 w-8 text-yellow-400" />
+                        </div>
+                    </div>
+
+                    <div className="bg-white rounded-lg shadow-md p-4 border-l-4 border-red-400">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-xs font-semibold text-gray-600 uppercase">
+                                    No Payment
+                                </p>
+                                <p className="text-xl font-bold text-gray-900 mt-1">
+                                    {stats.no_payment_count}
+                                </p>
+                                <p className="text-xs text-gray-500 mt-1">
+                                    Pending initial payment
+                                </p>
+                            </div>
+                            <ExclamationTriangleIcon className="h-8 w-8 text-red-400" />
+                        </div>
+                    </div>
+
+                    <div className="bg-white rounded-lg shadow-md p-4 border-l-4 border-teal-400">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-xs font-semibold text-gray-600 uppercase">
+                                    Renewals
+                                </p>
+                                <p className="text-xl font-bold text-gray-900 mt-1">
+                                    {stats.renewal_payments}
+                                </p>
+                                <p className="text-xs text-gray-500 mt-1">
+                                    Completed renewals
+                                </p>
+                            </div>
+                            <CheckCircleIcon className="h-8 w-8 text-teal-400" />
+                        </div>
+                    </div>
+                </div>
+
                 <div className="bg-white rounded-xl shadow-md p-6">
                     <form
                         onSubmit={handleSearch}
@@ -150,25 +208,15 @@ export default function Index({ payments, filters, stats }) {
                             />
                         </div>
                         <select
-                            value={type}
-                            onChange={(e) => setType(e.target.value)}
+                            value={paymentFor}
+                            onChange={(e) => setPaymentFor(e.target.value)}
                             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                         >
-                            <option value="">All Types</option>
+                            <option value="">All Payment Types</option>
                             <option value="initial">Initial</option>
+                            <option value="balance">Balance</option>
                             <option value="renewal">Renewal</option>
                             <option value="penalty">Penalty</option>
-                        </select>
-                        <select
-                            value={method}
-                            onChange={(e) => setMethod(e.target.value)}
-                            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        >
-                            <option value="">All Methods</option>
-                            <option value="cash">Cash</option>
-                            <option value="gcash">GCash</option>
-                            <option value="bank_transfer">Bank Transfer</option>
-                            <option value="check">Check</option>
                         </select>
                         <button
                             type="submit"
@@ -176,7 +224,7 @@ export default function Index({ payments, filters, stats }) {
                         >
                             Search
                         </button>
-                        {(search || type || method) && (
+                        {(search || type || method || paymentFor) && (
                             <Link
                                 href={route("payments.index")}
                                 className="px-6 py-2 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition"
@@ -187,7 +235,6 @@ export default function Index({ payments, filters, stats }) {
                     </form>
                 </div>
 
-                {/* Table */}
                 <div className="bg-white rounded-xl shadow-lg overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="min-w-full divide-y divide-gray-200">
@@ -206,10 +253,10 @@ export default function Index({ payments, filters, stats }) {
                                         Payment Date
                                     </th>
                                     <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase">
-                                        Type
+                                        Payment For
                                     </th>
                                     <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase">
-                                        Method
+                                        Balance Info
                                     </th>
                                     <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase">
                                         Received By
@@ -232,7 +279,10 @@ export default function Index({ payments, filters, stats }) {
                                                 </span>
                                                 {payment.official_receipt_number && (
                                                     <div className="text-xs text-gray-500">
-                                                        OR: {payment.official_receipt_number}
+                                                        OR:{" "}
+                                                        {
+                                                            payment.official_receipt_number
+                                                        }
                                                     </div>
                                                 )}
                                             </td>
@@ -268,27 +318,72 @@ export default function Index({ payments, filters, stats }) {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span
-                                                    className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getTypeBadge(
-                                                        payment.payment_type
+                                                    className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getPaymentForBadge(
+                                                        payment.payment_for
                                                     )}`}
                                                 >
-                                                    {payment.payment_type
+                                                    {payment.payment_for
                                                         .charAt(0)
                                                         .toUpperCase() +
-                                                        payment.payment_type.slice(
+                                                        payment.payment_for.slice(
                                                             1
                                                         )}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                <span
-                                                    className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getMethodBadge(
-                                                        payment.payment_method
-                                                    )}`}
-                                                >
-                                                    {payment.payment_method === 'bank_transfer' ? 'Bank Transfer' :
-                                                     payment.payment_method.charAt(0).toUpperCase() + payment.payment_method.slice(1)}
-                                                </span>
+                                                {payment.previous_balance !==
+                                                    null && (
+                                                    <div className="text-xs">
+                                                        <div className="text-gray-600">
+                                                            Before:{" "}
+                                                            <span className="font-semibold text-orange-600">
+                                                                ₱
+                                                                {parseFloat(
+                                                                    payment.previous_balance
+                                                                ).toLocaleString(
+                                                                    "en-US",
+                                                                    {
+                                                                        minimumFractionDigits: 2,
+                                                                    }
+                                                                )}
+                                                            </span>
+                                                        </div>
+                                                        <div className="text-gray-600">
+                                                            After:{" "}
+                                                            <span
+                                                                className={`font-semibold ${
+                                                                    payment.remaining_balance ===
+                                                                    0
+                                                                        ? "text-green-600"
+                                                                        : "text-orange-600"
+                                                                }`}
+                                                            >
+                                                                ₱
+                                                                {parseFloat(
+                                                                    payment.remaining_balance ||
+                                                                        0
+                                                                ).toLocaleString(
+                                                                    "en-US",
+                                                                    {
+                                                                        minimumFractionDigits: 2,
+                                                                    }
+                                                                )}
+                                                            </span>
+                                                        </div>
+                                                        {payment.remaining_balance ===
+                                                            0 && (
+                                                            <span className="text-xs text-green-600 font-bold">
+                                                                ✓ FULLY PAID
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                )}
+                                                {payment.previous_balance ===
+                                                    null && (
+                                                    <span className="text-xs text-gray-500 italic">
+                                                        N/A
+                                                    </span>
+                                                )}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                                                 {payment.receiver?.name ||
@@ -297,11 +392,11 @@ export default function Index({ payments, filters, stats }) {
                                             <td className="px-6 py-4 whitespace-nowrap text-center">
                                                 <div className="flex justify-center space-x-2">
                                                     <Link
-                                                        href={`/payments/${payment.id}/edit`}
-                                                        className="flex items-center px-3 py-2 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition"
-                                                        title="Edit"
+                                                        href={route("deceased.payment-history", payment.deceased_record?.id)}
+                                                        className="flex items-center px-3 py-2 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 transition"
+                                                        title="View Payment History"
                                                     >
-                                                        <PencilIcon className="h-4 w-4" />
+                                                        <EyeIcon className="h-4 w-4" />
                                                     </Link>
                                                     <button
                                                         onClick={() =>
@@ -354,7 +449,6 @@ export default function Index({ payments, filters, stats }) {
                         </table>
                     </div>
 
-                    {/* Pagination */}
                     {payments.data.length > 0 && (
                         <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
                             <div className="flex items-center justify-between">

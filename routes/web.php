@@ -16,9 +16,9 @@ use App\Http\Controllers\NoticeDistributionController;
 use App\Http\Controllers\MapController;
 use App\Http\Controllers\EmployerController;
 use App\Http\Controllers\PaymentExpiryController;
+use App\Http\Controllers\RenewalAlertController;
 use Inertia\Inertia;
 
-// Guest routes - wrapped in guest middleware to prevent authenticated users from accessing
 Route::middleware('guest')->group(function () {
     Route::get('/', function () {
         return view('login');
@@ -68,7 +68,6 @@ Route::middleware('guest')->group(function () {
         return redirect('/dashboard');
     });
 
-    // Forgot Password Routes
     Route::get('/forgot-password', function () {
         return view('forgot-password');
     })->name('password.request');
@@ -115,13 +114,11 @@ Route::middleware('guest')->group(function () {
     })->name('password.store');
 });
 
-// Logout route - accessible to authenticated users
 Route::post('/logout', function (Request $request) {
     Auth::logout();
     $request->session()->invalidate();
     $request->session()->regenerateToken();
 
-    // Return JSON response for AJAX requests (from our fetch call)
     if ($request->expectsJson() || $request->ajax()) {
         return response()->json([
             'success' => true,
@@ -129,44 +126,52 @@ Route::post('/logout', function (Request $request) {
         ]);
     }
 
-    // Fallback redirect for non-AJAX requests
     return redirect('/login')
         ->with('message', 'You have been logged out successfully.');
 })->middleware('auth')->name('logout');
 
-// Authenticated routes
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Deceased Records
     Route::resource('deceased', DeceasedRecordController::class);
 
-    // Payment Records
     Route::resource('payments', PaymentRecordController::class);
+    Route::get('/deceased/{deceased}/payment-history', [PaymentRecordController::class, 'paymentHistory'])
+        ->name('deceased.payment-history');
 
-    // Renewal Records
     Route::resource('renewals', RenewalRecordController::class);
 
-    // Notice Distributions
     Route::resource('notices', NoticeDistributionController::class);
-    Route::post('notices/{notice}/resend', [NoticeDistributionController::class, 'resend'])->name('notices.resend');
+    Route::post('notices/{notice}/resend', [NoticeDistributionController::class, 'resend'])
+        ->name('notices.resend');
 
-    // Map
     Route::get('/map', [MapController::class, 'index'])->name('map.index');
 
-    // Employers
     Route::resource('employers', EmployerController::class);
 
-    // Password Verification Routes
     Route::post('/verify-current-password', [EmployerController::class, 'verifyCurrentPassword'])
         ->name('verify.current.password');
 
     Route::post('/employers/{employer}/verify-password', [EmployerController::class, 'verifyPassword'])
         ->name('employers.verify-password');
 
-    // API Routes for Payment Expiry
     Route::prefix('api')->group(function () {
         Route::get('/expiring-payments', [PaymentExpiryController::class, 'getExpiringPayments']);
         Route::get('/expiring-records-list', [PaymentExpiryController::class, 'getExpiringRecordsList']);
+        Route::get('/upcoming-renewals', [RenewalAlertController::class, 'getUpcomingRenewals'])
+            ->name('renewals.upcoming');
+        Route::get('/overdue-renewals', [RenewalAlertController::class, 'getOverdueRenewals'])
+            ->name('renewals.overdue');
     });
+
+    Route::get('/test-sms', function () {
+        $smsService = new \App\Services\SmsService();
+
+        $result = $smsService->send(
+            '09567460163',
+            'Test message from PRAND System. This is a test SMS.'
+        );
+
+        return response()->json($result);
+    })->name('test.sms');
 });

@@ -18,8 +18,20 @@ export default function AuthenticatedLayout({ children }) {
         if (componentPath.includes("renewal")) return "renewals.index";
         if (componentPath.includes("notice")) return "notices.index";
         if (componentPath.includes("map")) return "map.index";
-        if (componentPath.includes("employers")) return "employers.index";
+        if (componentPath.includes("employer")) return "employers.index";
         return "dashboard";
+    };
+
+    // Get display name for the current route
+    const getDisplayName = () => {
+        const route = getCurrentRoute();
+        const routeName = route.split(".")[0];
+        
+        // Special case for employers -> User Profile
+        if (routeName === "employers") return "User Profile";
+        
+        // Capitalize first letter for other routes
+        return routeName.charAt(0).toUpperCase() + routeName.slice(1);
     };
 
     return (
@@ -35,13 +47,7 @@ export default function AuthenticatedLayout({ children }) {
                         <div className="flex items-center justify-between">
                             <div className="flex items-center lg:ml-0 ml-14">
                                 <h2 className="text-2xl font-bold text-gray-900">
-                                    {getCurrentRoute()
-                                        .split(".")[0]
-                                        .charAt(0)
-                                        .toUpperCase() +
-                                        getCurrentRoute()
-                                            .split(".")[0]
-                                            .slice(1)}
+                                    {getDisplayName()}
                                 </h2>
                             </div>
                             <div className="flex items-center space-x-4">

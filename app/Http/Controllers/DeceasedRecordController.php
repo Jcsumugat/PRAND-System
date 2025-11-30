@@ -20,11 +20,11 @@ class DeceasedRecordController extends Controller
         // Search functionality
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('fullname', 'like', "%{$search}%")
-                  ->orWhere('next_of_kin_name', 'like', "%{$search}%")
-                  ->orWhere('tomb_number', 'like', "%{$search}%")
-                  ->orWhere('tomb_location', 'like', "%{$search}%");
+                    ->orWhere('next_of_kin_name', 'like', "%{$search}%")
+                    ->orWhere('tomb_number', 'like', "%{$search}%")
+                    ->orWhere('tomb_location', 'like', "%{$search}%");
             });
         }
 
@@ -42,6 +42,53 @@ class DeceasedRecordController extends Controller
     }
 
     /**
+     * Get tomb availability data for all locations
+     */
+    private function getTombAvailability()
+    {
+        $locations = [
+            'North East A',
+            'North East B',
+            'North West A',
+            'North West B',
+            'South East A',
+            'South East B',
+            'South West A',
+            'South West B',
+            'Central Area'
+        ];
+
+        $tombData = [];
+
+        foreach ($locations as $location) {
+            // Get taken tomb numbers for this location
+            $takenTombs = DeceasedRecord::where('tomb_location', $location)
+                ->whereNull('deleted_at')
+                ->pluck('tomb_number')
+                ->toArray();
+
+            // Generate all possible tomb numbers (1-100)
+            $allTombs = range(1, 100);
+
+            // Convert taken tombs to integers for comparison
+            $takenTombsInt = array_map('intval', $takenTombs);
+
+            // Calculate available tombs
+            $availableTombs = array_diff($allTombs, $takenTombsInt);
+
+            $tombData[$location] = [
+                'taken' => $takenTombsInt,
+                'available' => array_values($availableTombs),
+                'total' => 100,
+                'taken_count' => count($takenTombsInt),
+                'available_count' => count($availableTombs)
+            ];
+        }
+
+        return $tombData;
+    }
+
+    /**
      * Show the form for creating a new resource.
      * Note: Registration now requires payment first - redirect to payment page
      */
@@ -50,20 +97,18 @@ class DeceasedRecordController extends Controller
         return Inertia::render('DeceasedRecords/Create', [
             'requiresPayment' => true,
             'standardAmount' => 5000.00,
-            'renewalYears' => 5
+            'renewalYears' => 5,
+            'tombAvailability' => $this->getTombAvailability()
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     * This should only be called after payment is made
-     */
     public function store(Request $request)
     {
         $validated = $request->validate([
             'fullname' => 'required|string|max:255',
             'birthday' => 'required|date|before:today',
             'date_of_death' => 'required|date|after_or_equal:birthday|before_or_equal:today',
+            'date_of_burial' => 'required|date|after_or_equal:date_of_death|before_or_equal:today',
             'tomb_number' => 'required|string|unique:deceased_records,tomb_number',
             'tomb_location' => 'required|string|max:255',
             'next_of_kin_name' => 'required|string|max:255',
@@ -73,20 +118,44 @@ class DeceasedRecordController extends Controller
             'address' => 'nullable|string',
         ]);
 
-        // Calculate payment due date: 5 years from date of death
-        $dateOfDeath = new \DateTime($validated['date_of_death']);
-        $paymentDueDate = clone $dateOfDeath;
-        $paymentDueDate->modify('+5 years');
-
-        $validated['payment_due_date'] = $paymentDueDate->format('Y-m-d');
-        $validated['payment_status'] = 'pending'; // Will be updated when payment is made
+        $validated['payment_status'] = 'pending';
+        $validated['total_amount_due'] = 5000.00;
+        $validated['amount_paid'] = 0;
+        $validated['balance'] = 5000.00;
+        $validated['is_fully_paid'] = false;
         $validated['created_by'] = Auth::id();
+
+        $validated['payment_due_date'] = date('Y-m-d', strtotime($validated['date_of_burial'] . ' +5 years'));
 
         $deceased = DeceasedRecord::create($validated);
 
-        // Redirect to payment page with the deceased record
         return redirect()->route('payments.create', ['deceased_id' => $deceased->id])
-            ->with('info', 'Deceased registered. Please complete the initial payment of ₱5,000.00 for 5 years.');
+            ->with('info', 'Deceased registered. Please make a payment. Minimum: ₱2,500.00, Full amount: ₱5,000.00 for 5 years coverage.');
+    }
+
+    public function update(Request $request, DeceasedRecord $deceased)
+    {
+        $validated = $request->validate([
+            'fullname' => 'required|string|max:255',
+            'birthday' => 'required|date|before:today',
+            'date_of_death' => 'required|date|after_or_equal:birthday|before_or_equal:today',
+            'date_of_burial' => 'required|date|after_or_equal:date_of_death|before_or_equal:today',
+            'tomb_number' => 'required|string|unique:deceased_records,tomb_number,' . $deceased->id,
+            'tomb_location' => 'required|string|max:255',
+            'next_of_kin_name' => 'required|string|max:255',
+            'next_of_kin_relationship' => 'nullable|string|max:100',
+            'contact_number' => 'required|string|max:20',
+            'email' => 'nullable|email|max:255',
+            'address' => 'nullable|string',
+            'payment_due_date' => 'nullable|date',
+        ]);
+
+        $validated['updated_by'] = Auth::id();
+
+        $deceased->update($validated);
+
+        return redirect()->route('deceased.index')
+            ->with('success', 'Deceased record updated successfully.');
     }
 
     /**
@@ -111,31 +180,6 @@ class DeceasedRecordController extends Controller
         ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, DeceasedRecord $deceased)
-    {
-        $validated = $request->validate([
-            'fullname' => 'required|string|max:255',
-            'birthday' => 'required|date|before:today',
-            'date_of_death' => 'required|date|after_or_equal:birthday|before_or_equal:today',
-            'tomb_number' => 'required|string|unique:deceased_records,tomb_number,' . $deceased->id,
-            'tomb_location' => 'required|string|max:255',
-            'next_of_kin_name' => 'required|string|max:255',
-            'next_of_kin_relationship' => 'nullable|string|max:100',
-            'contact_number' => 'required|string|max:20',
-            'email' => 'nullable|email|max:255',
-            'address' => 'nullable|string',
-        ]);
-
-        $validated['updated_by'] = Auth::id();
-
-        $deceased->update($validated);
-
-        return redirect()->route('deceased.index')
-            ->with('success', 'Deceased record updated successfully.');
-    }
 
     /**
      * Remove the specified resource from storage.

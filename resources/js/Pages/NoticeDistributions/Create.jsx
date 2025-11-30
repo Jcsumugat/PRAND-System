@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, useForm } from "@inertiajs/react";
 import InputError from "@/Components/InputError";
@@ -14,6 +14,11 @@ export default function Create({
         deceased_record_id: selectedDeceased?.id || "",
         recipient_name: selectedDeceased?.next_of_kin_name || "",
         recipient_number: selectedDeceased?.contact_number || "",
+        deceased_name: selectedDeceased?.fullname || "",
+        tomb_number: selectedDeceased?.tomb_number || "",
+        balance: selectedDeceased?.balance || 0,
+        payment_due_date: selectedDeceased?.payment_due_date || "",
+        total_amount_due: selectedDeceased?.total_amount_due || 0,
         message: "",
         notice_type: "general",
     });
@@ -23,7 +28,37 @@ export default function Create({
         selectedDeceased?.fullname || ""
     );
     const [showDropdown, setShowDropdown] = useState(false);
-    const maxMessageLength = 225;
+    const maxMessageLength = 500;
+
+    // Format currency for display
+    const formatCurrency = (amount) => {
+        return new Intl.NumberFormat('en-PH', {
+            style: 'currency',
+            currency: 'PHP',
+            minimumFractionDigits: 2
+        }).format(amount || 0);
+    };
+
+    // Calculate days overdue
+    const calculateDaysOverdue = (dueDate) => {
+        if (!dueDate) return 0;
+        const today = new Date();
+        const due = new Date(dueDate);
+        const diffTime = today - due;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays > 0 ? diffDays : 0;
+    };
+
+    // Format date for display
+    const formatDate = (dateString) => {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        });
+    };
 
     // Filter deceased records based on search query
     const filteredRecords = deceasedRecords.filter((record) => {
@@ -34,6 +69,62 @@ export default function Create({
             record.payment_status?.toLowerCase().includes(query)
         );
     });
+
+    // Generate message templates based on selected data
+    const generateTemplate = (type) => {
+        const daysOverdue = calculateDaysOverdue(data.payment_due_date);
+        const balance = parseFloat(data.balance || 0);
+        const totalDue = parseFloat(data.total_amount_due || 0);
+        
+        const templates = {
+            payment_reminder: `Dear ${data.recipient_name},
+
+Payment reminder from PRAND - Municipality of Culasi.
+
+Record: ${data.deceased_name}
+Tomb: ${data.tomb_number}
+Balance Due: ${formatCurrency(balance)}
+Due Date: ${formatDate(data.payment_due_date)}
+
+Please settle your payment at the municipal office at your earliest convenience.
+
+Thank you.`,
+            renewal_notice: `Dear ${data.recipient_name},
+
+Renewal reminder from PRAND - Municipality of Culasi.
+
+Record: ${data.deceased_name}
+Tomb: ${data.tomb_number}
+Renewal Due: ${formatDate(data.payment_due_date)}
+Amount: ${formatCurrency(totalDue)}
+
+Please visit the municipal office to process your renewal.
+
+Thank you.`,
+            overdue_notice: `URGENT: Payment Overdue
+
+Dear ${data.recipient_name},
+
+Record: ${data.deceased_name}
+Tomb: ${data.tomb_number}
+Overdue by: ${daysOverdue} days
+Balance Due: ${formatCurrency(balance)}
+
+Please visit PRAND - Municipality of Culasi immediately to settle your account and avoid penalties.
+
+Thank you.`,
+            general: "",
+        };
+        return templates[type] || "";
+    };
+
+    // Update message when notice type changes and we have deceased info
+    useEffect(() => {
+        if (data.notice_type !== "general" && data.deceased_name && data.recipient_name) {
+            const template = generateTemplate(data.notice_type);
+            handleMessageChange(template);
+        }
+    }, [data.notice_type, data.deceased_name, data.recipient_name, data.balance, data.payment_due_date]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -50,12 +141,70 @@ export default function Create({
     const handleSelectRecord = (record) => {
         setSearchQuery(record.fullname);
         setShowDropdown(false);
-        setData({
+        
+        const newData = {
             ...data,
             deceased_record_id: record.id,
             recipient_name: record.next_of_kin_name || "",
             recipient_number: record.contact_number || "",
-        });
+            deceased_name: record.fullname || "",
+            tomb_number: record.tomb_number || "",
+            balance: record.balance || 0,
+            payment_due_date: record.payment_due_date || "",
+            total_amount_due: record.total_amount_due || 0,
+        };
+        
+        setData(newData);
+
+        // Auto-populate message if a template type is selected
+        if (newData.notice_type !== "general") {
+            const daysOverdue = calculateDaysOverdue(newData.payment_due_date);
+            const balance = parseFloat(newData.balance || 0);
+            const totalDue = parseFloat(newData.total_amount_due || 0);
+            
+            const templates = {
+                payment_reminder: `Dear ${newData.recipient_name},
+
+Payment reminder from PRAND - Municipality of Culasi.
+
+Record: ${newData.deceased_name}
+Tomb: ${newData.tomb_number}
+Balance Due: ${formatCurrency(balance)}
+Due Date: ${formatDate(newData.payment_due_date)}
+
+Please settle your payment at the municipal office at your earliest convenience.
+
+Thank you.`,
+                renewal_notice: `Dear ${newData.recipient_name},
+
+Renewal reminder from PRAND - Municipality of Culasi.
+
+Record: ${newData.deceased_name}
+Tomb: ${newData.tomb_number}
+Renewal Due: ${formatDate(newData.payment_due_date)}
+Amount: ${formatCurrency(totalDue)}
+
+Please visit the municipal office to process your renewal.
+
+Thank you.`,
+                overdue_notice: `URGENT: Payment Overdue
+
+Dear ${newData.recipient_name},
+
+Record: ${newData.deceased_name}
+Tomb: ${newData.tomb_number}
+Overdue by: ${daysOverdue} days
+Balance Due: ${formatCurrency(balance)}
+
+Please visit PRAND - Municipality of Culasi immediately to settle your account and avoid penalties.
+
+Thank you.`,
+            };
+            
+            if (templates[newData.notice_type]) {
+                handleMessageChange(templates[newData.notice_type]);
+            }
+        }
     };
 
     const handleClearSelection = () => {
@@ -66,14 +215,12 @@ export default function Create({
             deceased_record_id: "",
             recipient_name: "",
             recipient_number: "",
+            deceased_name: "",
+            tomb_number: "",
+            balance: 0,
+            payment_due_date: "",
+            total_amount_due: 0,
         });
-    };
-
-    const noticeTemplates = {
-        payment_reminder: `Dear ${data.recipient_name}, this is a reminder about the upcoming payment for the tomb at our cemetery. Please settle the payment as soon as possible. Thank you.`,
-        renewal_notice: `Dear ${data.recipient_name}, your tomb renewal is due. Please contact us or visit the office to process your renewal. Thank you.`,
-        overdue_notice: `Dear ${data.recipient_name}, your payment is now overdue. Please settle your account immediately to avoid penalties. Thank you.`,
-        general: "",
     };
 
     return (
@@ -110,7 +257,6 @@ export default function Create({
                                     />
                                     <div className="relative mt-1">
                                         <div className="relative">
-                                            {/* Search Icon - Using SVG if icons not available */}
                                             <svg
                                                 className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400"
                                                 fill="none"
@@ -149,7 +295,6 @@ export default function Create({
                                                     }
                                                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                                                 >
-                                                    {/* X Icon - Using SVG */}
                                                     <svg
                                                         className="h-5 w-5"
                                                         fill="none"
@@ -194,7 +339,7 @@ export default function Create({
                                                                             Tomb:{" "}
                                                                             {
                                                                                 record.tomb_number
-                                                                            }
+                                                                            } | Balance: {formatCurrency(record.balance)}
                                                                         </p>
                                                                     </div>
                                                                     <span
@@ -233,6 +378,52 @@ export default function Create({
                                         records
                                     </p>
                                 </div>
+
+                                {/* Display Selected Deceased Info */}
+                                {data.deceased_name && (
+                                    <div className="md:col-span-2 bg-blue-50 border border-blue-200 rounded-md p-4">
+                                        <h4 className="font-semibold text-blue-900 mb-3">Selected Record Details</h4>
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                                            <div>
+                                                <span className="font-semibold text-gray-700 block">
+                                                    Deceased Name:
+                                                </span>
+                                                <p className="text-gray-900">
+                                                    {data.deceased_name}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <span className="font-semibold text-gray-700 block">
+                                                    Tomb Number:
+                                                </span>
+                                                <p className="text-gray-900">
+                                                    {data.tomb_number}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <span className="font-semibold text-gray-700 block">
+                                                    Balance Due:
+                                                </span>
+                                                <p className={`font-bold ${parseFloat(data.balance) > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                                                    {formatCurrency(data.balance)}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <span className="font-semibold text-gray-700 block">
+                                                    Due Date:
+                                                </span>
+                                                <p className="text-gray-900">
+                                                    {formatDate(data.payment_due_date)}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        {calculateDaysOverdue(data.payment_due_date) > 0 && (
+                                            <div className="mt-3 p-2 bg-red-100 border border-red-300 rounded text-sm">
+                                                <span className="font-semibold text-red-800">⚠️ Overdue by {calculateDaysOverdue(data.payment_due_date)} days</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         </div>
 
@@ -247,7 +438,7 @@ export default function Create({
                                 <div>
                                     <InputLabel
                                         htmlFor="recipient_name"
-                                        value="Recipient Name *"
+                                        value="Recipient Name (Next of Kin) *"
                                         className="text-gray-700 font-semibold"
                                     />
                                     <TextInput
@@ -322,13 +513,6 @@ export default function Create({
                                                 "notice_type",
                                                 e.target.value
                                             );
-                                            if (e.target.value !== "general") {
-                                                handleMessageChange(
-                                                    noticeTemplates[
-                                                        e.target.value
-                                                    ]
-                                                );
-                                            }
                                         }}
                                         required
                                     >
@@ -336,19 +520,22 @@ export default function Create({
                                             General Notice
                                         </option>
                                         <option value="payment_reminder">
-                                            Payment Reminder
+                                            Payment Reminder (includes balance & due date)
                                         </option>
                                         <option value="renewal_notice">
-                                            Renewal Notice
+                                            Renewal Notice (includes amount & renewal date)
                                         </option>
                                         <option value="overdue_notice">
-                                            Overdue Notice
+                                            Overdue Notice (includes days overdue & balance)
                                         </option>
                                     </select>
                                     <InputError
                                         message={errors.notice_type}
                                         className="mt-2"
                                     />
+                                    <p className="mt-1 text-xs text-gray-600">
+                                        Templates automatically include relevant payment data
+                                    </p>
                                 </div>
 
                                 {/* Message */}
@@ -376,14 +563,13 @@ export default function Create({
                                         onChange={(e) =>
                                             handleMessageChange(e.target.value)
                                         }
-                                        rows="4"
-                                        placeholder="Enter your message here (max 225 characters for SMS)"
+                                        rows="8"
+                                        placeholder="Enter your message here (max 500 characters)"
                                         required
                                     />
                                     {messageLength > maxMessageLength && (
                                         <p className="text-xs text-red-600 mt-1">
-                                            Message exceeds SMS character limit.
-                                            It may be sent as multiple messages.
+                                            ⚠️ Message exceeds 500 character limit ({Math.ceil(messageLength / maxMessageLength)} SMS will be sent).
                                         </p>
                                     )}
                                     <InputError
@@ -397,15 +583,15 @@ export default function Create({
                         {/* Message Preview */}
                         <div className="bg-gradient-to-r from-purple-100 to-pink-100 rounded-lg p-6 border-2 border-purple-300">
                             <h4 className="text-lg font-semibold text-purple-900 mb-3">
-                                Message Preview
+                                📱 Message Preview
                             </h4>
                             <div className="bg-white rounded-lg p-4 border-l-4 border-purple-600">
-                                <p className="text-sm text-gray-700 leading-relaxed">
+                                <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap font-mono">
                                     {data.message ||
                                         "Your message will appear here..."}
                                 </p>
-                                <div className="flex justify-between items-center mt-3 text-xs text-gray-500">
-                                    <span>To: {data.recipient_number}</span>
+                                <div className="flex justify-between items-center mt-3 pt-3 border-t text-xs text-gray-500">
+                                    <span>To: {data.recipient_number || "Phone number"}</span>
                                     <span
                                         className={
                                             messageLength > maxMessageLength
@@ -414,7 +600,7 @@ export default function Create({
                                         }
                                     >
                                         {Math.ceil(
-                                            messageLength / maxMessageLength
+                                            messageLength / maxMessageLength || 1
                                         )}{" "}
                                         SMS
                                     </span>
@@ -433,8 +619,8 @@ export default function Create({
                             </button>
                             <button
                                 onClick={handleSubmit}
-                                disabled={processing}
-                                className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 transition shadow-md"
+                                disabled={processing || !data.deceased_record_id || !data.message}
+                                className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-md"
                             >
                                 {processing
                                     ? "Sending Notice..."

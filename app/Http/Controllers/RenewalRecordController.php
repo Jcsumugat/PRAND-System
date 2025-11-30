@@ -2,136 +2,89 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\RenewalRecord;
 use App\Models\DeceasedRecord;
+use App\Models\PaymentRecord;
+use App\Models\RenewalRecord;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Carbon;
 
 class RenewalRecordController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request)
     {
-        $query = RenewalRecord::with(['deceasedRecord', 'processor'])
-            ->orderBy('renewal_date', 'desc');
+        $query = RenewalRecord::with(['deceased_record', 'processor']);
 
-        // Filter by status
-        if ($request->has('status') && $request->status != '') {
-            $query->where('status', $request->status);
-        }
-
-        // Search by deceased name
-        if ($request->has('search') && $request->search != '') {
+        // Search filter
+        if ($request->filled('search')) {
             $search = $request->search;
-            $query->whereHas('deceasedRecord', function($q) use ($search) {
+            $query->whereHas('deceased_record', function($q) use ($search) {
                 $q->where('fullname', 'like', "%{$search}%")
                   ->orWhere('tomb_number', 'like', "%{$search}%");
             });
         }
 
-        $renewals = $query->paginate(10)->withQueryString();
-
-        return Inertia::render('RenewalRecords/Index', [
-            'renewals' => $renewals,
-            'filters' => $request->only(['search', 'status'])
-        ]);
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create(Request $request)
-    {
-        $deceasedRecords = DeceasedRecord::orderBy('fullname')->get();
-        $selectedDeceased = null;
-
-        if ($request->has('deceased_id')) {
-            $selectedDeceased = DeceasedRecord::find($request->deceased_id);
+        // Status filter
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
         }
 
-        return Inertia::render('RenewalRecords/Create', [
-            'deceasedRecords' => $deceasedRecords,
-            'selectedDeceased' => $selectedDeceased
+        // Payment status filter
+        if ($request->filled('payment_status')) {
+            $query->where('payment_status', $request->payment_status);
+        }
+
+        $renewals = $query->latest()->paginate(10);
+
+        // Calculate statistics
+        $stats = [
+            'total_renewals' => RenewalRecord::count(),
+            'active_renewals' => RenewalRecord::where('status', 'active')->count(),
+            'due_soon' => DeceasedRecord::where('is_fully_paid', true)
+                ->whereNotNull('payment_due_date')
+                ->where('payment_due_date', '>=', date('Y-m-d'))
+                ->where('payment_due_date', '<=', date('Y-m-d', strtotime('+2 months')))
+                ->count(),
+            'overdue' => DeceasedRecord::where('is_fully_paid', true)
+                ->whereNotNull('payment_due_date')
+                ->where('payment_due_date', '<', date('Y-m-d'))
+                ->count(),
+            // Financial stats
+            'total_renewal_payments' => PaymentRecord::where('payment_for', 'renewal')->count(),
+            'total_renewal_amount' => (float) PaymentRecord::where('payment_for', 'renewal')->sum('amount'),
+            'total_balance' => (float) RenewalRecord::sum('balance'),
+            'fully_paid_renewals' => RenewalRecord::where('is_fully_paid', true)->count(),
+            'partial_payment_renewals' => RenewalRecord::where('payment_status', 'partial')->count(),
+            'pending_renewals' => RenewalRecord::where('payment_status', 'pending')->count(),
+        ];
+
+        // Get records that need renewal
+        $needsRenewal = DeceasedRecord::where('is_fully_paid', true)
+            ->whereNotNull('payment_due_date')
+            ->where('payment_due_date', '<=', date('Y-m-d', strtotime('+2 months')))
+            ->orderBy('payment_due_date', 'asc')
+            ->get()
+            ->map(function($record) {
+                $daysUntil = Carbon::parse($record->payment_due_date)->diffInDays(Carbon::now(), false);
+                return [
+                    'id' => $record->id,
+                    'fullname' => $record->fullname,
+                    'tomb_number' => $record->tomb_number,
+                    'tomb_location' => $record->tomb_location,
+                    'next_of_kin_name' => $record->next_of_kin_name,
+                    'contact_number' => $record->contact_number,
+                    'payment_due_date' => $record->payment_due_date,
+                    'last_payment_date' => $record->last_payment_date,
+                    'days_until_due' => abs($daysUntil),
+                    'is_overdue' => $daysUntil > 0,
+                ];
+            });
+
+        return Inertia::render('RenewalRecords/Index', [ 
+            'renewals' => $renewals,
+            'filters' => $request->only(['search', 'status', 'payment_status']),
+            'stats' => $stats,
+            'needsRenewal' => $needsRenewal,
         ]);
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'deceased_record_id' => 'required|exists:deceased_records,id',
-            'renewal_date' => 'required|date',
-            'next_renewal_date' => 'required|date|after:renewal_date',
-            'renewal_fee' => 'required|numeric|min:0',
-            'status' => 'required|in:active,expired,pending',
-            'remarks' => 'nullable|string',
-        ]);
-
-        $validated['processed_by'] = Auth::id();
-
-        RenewalRecord::create($validated);
-
-        return redirect()->route('renewals.index')
-            ->with('success', 'Renewal record created successfully.');
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(RenewalRecord $renewal)
-    {
-        $renewal->load(['deceasedRecord', 'processor']);
-
-        return Inertia::render('RenewalRecords/Show', [
-            'renewal' => $renewal
-        ]);
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(RenewalRecord $renewal)
-    {
-        $deceasedRecords = DeceasedRecord::orderBy('fullname')->get();
-
-        return Inertia::render('RenewalRecords/Edit', [
-            'renewal' => $renewal,
-            'deceasedRecords' => $deceasedRecords
-        ]);
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, RenewalRecord $renewal)
-    {
-        $validated = $request->validate([
-            'renewal_date' => 'required|date',
-            'next_renewal_date' => 'required|date|after:renewal_date',
-            'renewal_fee' => 'required|numeric|min:0',
-            'status' => 'required|in:active,expired,pending',
-            'remarks' => 'nullable|string',
-        ]);
-
-        $renewal->update($validated);
-
-        return redirect()->route('renewals.index')
-            ->with('success', 'Renewal record updated successfully.');
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(RenewalRecord $renewal)
-    {
-        $renewal->delete();
-
-        return redirect()->route('renewals.index')
-            ->with('success', 'Renewal record deleted successfully.');
     }
 }

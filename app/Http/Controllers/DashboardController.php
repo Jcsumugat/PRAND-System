@@ -5,55 +5,60 @@ namespace App\Http\Controllers;
 use App\Models\DeceasedRecord;
 use App\Models\PaymentRecord;
 use App\Models\RenewalRecord;
-use App\Models\NoticeDistribution;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        // Get statistics
-        $totalRecords = DeceasedRecord::count();
+        $stats = [
+            'totalRecords' => DeceasedRecord::count(),
+            'fullyPaidRecords' => DeceasedRecord::where('is_fully_paid', true)->count(),
+            'partialPayments' => DeceasedRecord::where('amount_paid', '>', 0)
+                ->where('is_fully_paid', false)
+                ->count(),
+            'noPayment' => DeceasedRecord::where('amount_paid', 0)->count(),
+            'totalCollected' => (float) PaymentRecord::sum('amount'),
+            'totalBalance' => (float) DeceasedRecord::where('balance', '>', 0)->sum('balance'),
+            'paidThisMonth' => PaymentRecord::whereMonth('payment_date', date('m'))
+                ->whereYear('payment_date', date('Y'))
+                ->count(),
+            'upcomingRenewals' => DeceasedRecord::where('is_fully_paid', true)
+                ->whereNotNull('payment_due_date')
+                ->where('payment_due_date', '>=', date('Y-m-d'))
+                ->where('payment_due_date', '<=', date('Y-m-d', strtotime('+2 months')))
+                ->count(),
+            'overduePayments' => DeceasedRecord::where('is_fully_paid', true)
+                ->whereNotNull('payment_due_date')
+                ->where('payment_due_date', '<', date('Y-m-d'))
+                ->count(),
+            'totalRenewals' => RenewalRecord::count(),
+            'activeRenewals' => RenewalRecord::where('status', 'active')->count(),
+        ];
 
-        $paidThisMonth = PaymentRecord::whereMonth('payment_date', now()->month)
-            ->whereYear('payment_date', now()->year)
-            ->count();
-
-        $pendingRenewals = DeceasedRecord::where('payment_status', 'pending')->count();
-
-        $overduePayments = DeceasedRecord::where('payment_status', 'overdue')->count();
-
-        // Monthly statistics for bar chart (last 6 months)
-        $monthlyStats = DeceasedRecord::select(
-                DB::raw('MONTH(date_of_death) as month'),
-                DB::raw('COUNT(*) as count')
-            )
-            ->whereYear('date_of_death', now()->year)
-            ->groupBy('month')
-            ->orderBy('month')
-            ->get();
-
-        // Trend data for line chart (old vs new deceased)
-        $trendData = DeceasedRecord::select(
-                DB::raw('MONTH(created_at) as month'),
-                DB::raw('COUNT(*) as count')
-            )
-            ->whereYear('created_at', now()->year)
-            ->groupBy('month')
-            ->orderBy('month')
-            ->get();
+        $upcomingRenewalsList = DeceasedRecord::where('is_fully_paid', true)
+            ->whereNotNull('payment_due_date')
+            ->where('payment_due_date', '>=', date('Y-m-d'))
+            ->where('payment_due_date', '<=', date('Y-m-d', strtotime('+2 months')))
+            ->orderBy('payment_due_date', 'asc')
+            ->take(5)
+            ->get()
+            ->map(function($deceased) {
+                $daysUntil = $deceased->daysUntilRenewal();
+                return [
+                    'id' => $deceased->id,
+                    'fullname' => $deceased->fullname,
+                    'tomb_number' => $deceased->tomb_number,
+                    'payment_due_date' => $deceased->payment_due_date,
+                    'days_until_renewal' => $daysUntil,
+                    'alert_level' => $daysUntil <= 7 ? 'critical' : ($daysUntil <= 30 ? 'warning' : 'info')
+                ];
+            });
 
         return Inertia::render('Dashboard', [
-            'stats' => [
-                'totalRecords' => $totalRecords,
-                'paidThisMonth' => $paidThisMonth,
-                'pendingRenewals' => $pendingRenewals,
-                'overduePayments' => $overduePayments,
-            ],
-            'monthlyStats' => $monthlyStats,
-            'trendData' => $trendData,
+            'stats' => $stats,
+            'upcomingRenewals' => $upcomingRenewalsList,
         ]);
     }
 }

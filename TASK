@@ -59,3 +59,6 @@ Autofill Next Renewal Date to 5 years
 
 
 i want to add an icon after Tomb Number label that when hovered it will display the available and taken tomb numbers, up to 100 maximum per section like for North East only 100 tombs can be selected. heres my current database, controller and Create.jsx
+
+
+change the edit icon to show icon and if clicked it will show a modal with all of the information of the payment.

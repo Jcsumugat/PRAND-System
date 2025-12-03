@@ -2,22 +2,22 @@ import { useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { 
-    PencilIcon, 
+    EyeIcon,
     TrashIcon, 
     MagnifyingGlassIcon, 
     PlusIcon,
     ClockIcon,
     CheckCircleIcon,
     ExclamationTriangleIcon,
-    BanknotesIcon,
-    CurrencyDollarIcon
+    XMarkIcon
 } from '@heroicons/react/24/outline';
 
-export default function Index({ renewals, filters, stats = {}, needsRenewal = [] }) {
+export default function Index({ renewals = { data: [] }, filters = {}, stats = {}, needsRenewal = [] }) {
     const [search, setSearch] = useState(filters?.search || '');
     const [status, setStatus] = useState(filters?.status || '');
     const [paymentStatus, setPaymentStatus] = useState(filters?.payment_status || '');
-    const [showNeedsRenewal, setShowNeedsRenewal] = useState(true);
+    const [selectedRenewal, setSelectedRenewal] = useState(null);
+    const [showModal, setShowModal] = useState(false);
 
     // Provide default values for stats
     const safeStats = {
@@ -36,6 +36,11 @@ export default function Index({ renewals, filters, stats = {}, needsRenewal = []
     const handleSearch = (e) => {
         e.preventDefault();
         router.get(route('renewals.index'), { search, status, payment_status: paymentStatus }, { preserveState: true });
+    };
+
+    const handleViewDetails = (renewal) => {
+        setSelectedRenewal(renewal);
+        setShowModal(true);
     };
 
     const handleDelete = (id, deceasedName) => {
@@ -75,6 +80,21 @@ export default function Index({ renewals, filters, stats = {}, needsRenewal = []
 
     const isExpired = (nextRenewalDate) => {
         return new Date(nextRenewalDate) < new Date();
+    };
+
+    const formatCurrency = (amount) => {
+        return parseFloat(amount || 0).toLocaleString('en-US', { 
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2 
+        });
+    };
+
+    const formatDate = (date) => {
+        return new Date(date).toLocaleDateString('en-US', {
+            month: 'short',
+            day: '2-digit',
+            year: 'numeric'
+        });
     };
 
     return (
@@ -139,59 +159,6 @@ export default function Index({ renewals, filters, stats = {}, needsRenewal = []
                         </div>
                     </div>
                 </div>
-
-                {/* Financial Summary Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="bg-white rounded-lg shadow-md p-4 border-l-4 border-green-400">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-xs font-semibold text-gray-600 uppercase">Total Collected</p>
-                                <p className="text-xl font-bold text-gray-900 mt-1">
-                                    ₱{safeStats.total_renewal_amount.toLocaleString('en-US', {
-                                        minimumFractionDigits: 2,
-                                        maximumFractionDigits: 2
-                                    })}
-                                </p>
-                                <p className="text-xs text-gray-500 mt-1">From renewal payments</p>
-                            </div>
-                            <BanknotesIcon className="h-8 w-8 text-green-400" />
-                        </div>
-                    </div>
-
-                    <div className="bg-white rounded-lg shadow-md p-4 border-l-4 border-orange-400">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-xs font-semibold text-gray-600 uppercase">Total Balance</p>
-                                <p className="text-xl font-bold text-gray-900 mt-1">
-                                    ₱{safeStats.total_balance.toLocaleString('en-US', {
-                                        minimumFractionDigits: 2,
-                                        maximumFractionDigits: 2
-                                    })}
-                                </p>
-                                <p className="text-xs text-gray-500 mt-1">Outstanding amounts</p>
-                            </div>
-                            <ExclamationTriangleIcon className="h-8 w-8 text-orange-400" />
-                        </div>
-                    </div>
-
-                    <div className="bg-white rounded-lg shadow-md p-4 border-l-4 border-yellow-400">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-xs font-semibold text-gray-600 uppercase">Partial Payments</p>
-                                <p className="text-xl font-bold text-gray-900 mt-1">{safeStats.partial_payment_renewals}</p>
-                                <p className="text-xs text-gray-500 mt-1">With balance remaining</p>
-                            </div>
-                            <ClockIcon className="h-8 w-8 text-yellow-400" />
-                        </div>
-                    </div>
-                </div>
-
-                {/* Needs Renewal Section - Keep your existing code */}
-                {needsRenewal && needsRenewal.length > 0 && (
-                    <div className="bg-white rounded-xl shadow-lg overflow-hidden border-2 border-orange-300">
-                        {/* ... your existing needs renewal code ... */}
-                    </div>
-                )}
 
                 {/* Search and Filter */}
                 <div className="bg-white rounded-xl shadow-md p-6">
@@ -264,67 +231,50 @@ export default function Index({ renewals, filters, stats = {}, needsRenewal = []
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
-                                {renewals.data.length > 0 ? (
+                                {renewals.data && renewals.data.length > 0 ? (
                                     renewals.data.map((renewal) => (
                                         <tr key={renewal.id} className={`hover:bg-blue-50 transition ${isExpired(renewal.next_renewal_date) ? 'bg-red-50' : ''}`}>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="text-sm font-semibold text-gray-900">
-                                                    {renewal.deceased_record.fullname}
+                                                    {renewal.deceased_record?.fullname || 'N/A'}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                {renewal.deceased_record.tomb_number}
+                                                {renewal.deceased_record?.tomb_number || 'N/A'}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                                                {new Date(renewal.renewal_date).toLocaleDateString('en-US', {
-                                                    month: 'short',
-                                                    day: '2-digit',
-                                                    year: 'numeric'
-                                                })}
+                                                {renewal.renewal_date ? formatDate(renewal.renewal_date) : 'N/A'}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                                                 <span className={isExpired(renewal.next_renewal_date) ? 'text-red-600 font-bold' : ''}>
-                                                    {new Date(renewal.next_renewal_date).toLocaleDateString('en-US', {
-                                                        month: 'short',
-                                                        day: '2-digit',
-                                                        year: 'numeric'
-                                                    })}
+                                                    {renewal.next_renewal_date ? formatDate(renewal.next_renewal_date) : 'N/A'}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="text-xs">
                                                     <div className="text-gray-600">
-                                                        Fee: <span className="font-semibold text-gray-900">
-                                                            ₱{parseFloat(renewal.renewal_fee || 5000).toLocaleString('en-US', { 
-                                                                minimumFractionDigits: 2,
-                                                                maximumFractionDigits: 2 
-                                                            })}
+                                                        Renewal Fee: <span className="font-semibold text-gray-900">
+                                                            ₱{formatCurrency(5000)}
                                                         </span>
                                                     </div>
                                                     <div className="text-gray-600">
                                                         Paid: <span className="font-semibold text-green-600">
-                                                            ₱{parseFloat(renewal.amount_paid || 0).toLocaleString('en-US', { 
-                                                                minimumFractionDigits: 2,
-                                                                maximumFractionDigits: 2 
-                                                            })}
+                                                            ₱{formatCurrency(renewal.amount_paid || 0)}
                                                         </span>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className={`text-sm font-bold ${(renewal.balance || 5000) === 0 ? 'text-green-600' : 'text-orange-600'}`}>
-                                                    ₱{parseFloat(renewal.balance || 5000).toLocaleString('en-US', { 
-                                                        minimumFractionDigits: 2,
-                                                        maximumFractionDigits: 2 
-                                                    })}
+                                                <span className={`text-sm font-bold ${renewal.balance === 0 ? 'text-green-600' : 'text-orange-600'}`}>
+                                                    ₱{formatCurrency(renewal.balance || (5000 - (renewal.amount_paid || 0)))}
                                                 </span>
-                                                {(renewal.is_fully_paid || (renewal.balance || 5000) === 0) && (
+                                                {(renewal.is_fully_paid || renewal.balance === 0) && (
                                                     <div className="text-xs text-green-600 font-bold mt-1">✓ FULLY PAID</div>
                                                 )}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadge(renewal.status)}`}>
-                                                    {renewal.status.charAt(0).toUpperCase() + renewal.status.slice(1)}
+                                                    {renewal.status?.charAt(0).toUpperCase() + renewal.status?.slice(1) || 'N/A'}
                                                 </span>
                                                 {renewal.payment_status && (
                                                     <div className="mt-1">
@@ -337,14 +287,14 @@ export default function Index({ renewals, filters, stats = {}, needsRenewal = []
                                             <td className="px-6 py-4 whitespace-nowrap text-center">
                                                 <div className="flex justify-center space-x-2">
                                                     <button
-                                                        onClick={() => router.visit(route('renewals.edit', renewal.id))}
+                                                        onClick={() => handleViewDetails(renewal)}
                                                         className="flex items-center px-3 py-2 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition"
-                                                        title="Edit"
+                                                        title="View Details"
                                                     >
-                                                        <PencilIcon className="h-4 w-4" />
+                                                        <EyeIcon className="h-4 w-4" />
                                                     </button>
                                                     <button
-                                                        onClick={() => handleDelete(renewal.id, renewal.deceased_record.fullname)}
+                                                        onClick={() => handleDelete(renewal.id, renewal.deceased_record?.fullname)}
                                                         className="flex items-center px-3 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition"
                                                         title="Delete"
                                                     >
@@ -370,12 +320,127 @@ export default function Index({ renewals, filters, stats = {}, needsRenewal = []
                             </tbody>
                         </table>
                     </div>
-                    {renewals.data.length > 0 && (
-                        <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
-                        </div>
-                    )}
                 </div>
             </div>
+
+            {/* Payment Details Modal */}
+            {showModal && selectedRenewal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                        {/* Modal Header */}
+                        <div className="bg-gradient-to-r from-blue-600 to-cyan-600 px-6 py-4 flex justify-between items-center sticky top-0">
+                            <h3 className="text-xl font-bold text-white">Payment Details</h3>
+                            <button
+                                onClick={() => setShowModal(false)}
+                                className="text-white hover:bg-white hover:bg-opacity-20 p-1 rounded transition"
+                            >
+                                <XMarkIcon className="h-6 w-6" />
+                            </button>
+                        </div>
+
+                        {/* Modal Content */}
+                        <div className="p-6 space-y-6">
+                            {/* Deceased Information */}
+                            <div>
+                                <h4 className="text-lg font-bold text-gray-800 mb-4 border-b-2 border-blue-200 pb-2">Deceased Information</h4>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p className="text-xs font-semibold text-gray-600 uppercase">Full Name</p>
+                                        <p className="text-sm font-medium text-gray-900 mt-1">{selectedRenewal.deceased_record?.fullname || 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs font-semibold text-gray-600 uppercase">Tomb Number</p>
+                                        <p className="text-sm font-medium text-gray-900 mt-1">{selectedRenewal.deceased_record?.tomb_number || 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs font-semibold text-gray-600 uppercase">Tomb Location</p>
+                                        <p className="text-sm font-medium text-gray-900 mt-1">{selectedRenewal.deceased_record?.tomb_location || 'N/A'}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Renewal Information */}
+                            <div>
+                                <h4 className="text-lg font-bold text-gray-800 mb-4 border-b-2 border-blue-200 pb-2">Renewal Information</h4>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p className="text-xs font-semibold text-gray-600 uppercase">Renewal Date</p>
+                                        <p className="text-sm font-medium text-gray-900 mt-1">{selectedRenewal.renewal_date ? formatDate(selectedRenewal.renewal_date) : 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs font-semibold text-gray-600 uppercase">Next Renewal Date</p>
+                                        <p className="text-sm font-medium text-gray-900 mt-1">{selectedRenewal.next_renewal_date ? formatDate(selectedRenewal.next_renewal_date) : 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs font-semibold text-gray-600 uppercase">Status</p>
+                                        <div className="mt-1">
+                                            <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadge(selectedRenewal.status)}`}>
+                                                {selectedRenewal.status?.charAt(0).toUpperCase() + selectedRenewal.status?.slice(1) || 'N/A'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs font-semibold text-gray-600 uppercase">Payment Status</p>
+                                        <div className="mt-1">
+                                            <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getPaymentStatusBadge(selectedRenewal.payment_status)}`}>
+                                                {getPaymentStatusLabel(selectedRenewal.payment_status)}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Payment Information */}
+                            <div>
+                                <h4 className="text-lg font-bold text-gray-800 mb-4 border-b-2 border-blue-200 pb-2">Payment Information</h4>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="bg-blue-50 p-4 rounded-lg">
+                                        <p className="text-xs font-semibold text-blue-700 uppercase">Renewal Fee</p>
+                                        <p className="text-2xl font-bold text-blue-900 mt-1">₱{formatCurrency(5000)}</p>
+                                    </div>
+                                    <div className="bg-green-50 p-4 rounded-lg">
+                                        <p className="text-xs font-semibold text-green-700 uppercase">Amount Paid</p>
+                                        <p className="text-2xl font-bold text-green-900 mt-1">₱{formatCurrency(selectedRenewal.amount_paid || 0)}</p>
+                                    </div>
+                                    <div className="bg-orange-50 p-4 rounded-lg">
+                                        <p className="text-xs font-semibold text-orange-700 uppercase">Balance</p>
+                                        <p className="text-2xl font-bold text-orange-900 mt-1">₱{formatCurrency(selectedRenewal.balance || (5000 - (selectedRenewal.amount_paid || 0)))}</p>
+                                    </div>
+                                    <div className={`${selectedRenewal.balance === 0 ? 'bg-green-50' : 'bg-gray-50'} p-4 rounded-lg`}>
+                                        <p className="text-xs font-semibold text-gray-700 uppercase">Payment Status</p>
+                                        <p className={`text-2xl font-bold mt-1 ${(selectedRenewal.is_fully_paid || selectedRenewal.balance === 0) ? 'text-green-900' : 'text-gray-900'}`}>
+                                            {(selectedRenewal.is_fully_paid || selectedRenewal.balance === 0) ? '✓ PAID' : 'PENDING'}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Additional Information */}
+                            {selectedRenewal.processor && (
+                                <div>
+                                    <h4 className="text-lg font-bold text-gray-800 mb-4 border-b-2 border-blue-200 pb-2">Processor Information</h4>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <p className="text-xs font-semibold text-gray-600 uppercase">Processor Name</p>
+                                            <p className="text-sm font-medium text-gray-900 mt-1">{selectedRenewal.processor?.name || 'N/A'}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end">
+                            <button
+                                onClick={() => setShowModal(false)}
+                                className="px-6 py-2 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </AuthenticatedLayout>
     );
 }

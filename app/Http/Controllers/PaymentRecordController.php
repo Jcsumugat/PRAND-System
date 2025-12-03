@@ -17,6 +17,7 @@ class PaymentRecordController extends Controller
     public function index(Request $request)
     {
         $query = PaymentRecord::with(['deceasedRecord', 'receiver'])
+            ->where('payment_for', '!=', 'renewal')
             ->orderBy('created_at', 'desc')
             ->orderBy('payment_date', 'desc');
 
@@ -96,118 +97,166 @@ class PaymentRecordController extends Controller
         DB::beginTransaction();
 
         try {
-            $deceased = DeceasedRecord::find($validated['deceased_record_id']);
+            $deceased = DeceasedRecord::findOrFail($validated['deceased_record_id']);
 
-            if ($validated['payment_for'] === 'balance' || $validated['payment_for'] === 'initial') {
-                if ($deceased->balance <= 0) {
-                    return back()->withErrors(['amount' => 'This record is already fully paid.']);
-                }
-
-                if ($validated['amount'] > $deceased->balance) {
-                    return back()->withErrors(['amount' => 'Payment amount cannot exceed remaining balance of ₱' . number_format($deceased->balance, 2)]);
-                }
-
-                if ($deceased->amount_paid == 0 && $validated['amount'] < 2500) {
-                    return back()->withErrors(['amount' => 'Minimum down payment is ₱2,500.00 (50% of total amount)']);
-                }
-            }
-
-            // Calculate coverage dates based on date_of_burial
+            // Initialize variables
             $coverageStartDate = null;
             $coverageEndDate = null;
             $coverageStatus = 'initial';
+            $remainingBalance = null;
 
-            $newAmountPaid = $deceased->amount_paid + $validated['amount'];
-            $newBalance = $deceased->balance - $validated['amount'];
-            $isFullyPaid = $newBalance <= 0;
+            // Handle RENEWAL payments
+            if ($validated['payment_for'] === 'renewal') {
+                // Check if initial payment is fully paid
+                if (!$deceased->is_fully_paid) {
+                    return back()->withErrors(['error' => 'Cannot process renewal. Initial payment must be fully paid first.']);
+                }
 
-            if (($validated['payment_for'] === 'initial' || $validated['payment_for'] === 'balance') && $isFullyPaid) {
-                // Use date_of_burial as the start of coverage
-                $coverageStartDate = Carbon::parse($deceased->date_of_burial);
-                $coverageEndDate = $coverageStartDate->copy()->addYears(5);
-                $coverageStatus = 'initial';
-            } elseif ($validated['payment_for'] === 'renewal' && $isFullyPaid) {
-                // For renewals, get the last coverage end date or use burial date
+                // Get the last coverage end date from payment records
                 $lastPayment = PaymentRecord::where('deceased_record_id', $deceased->id)
                     ->whereNotNull('coverage_end_date')
                     ->orderBy('coverage_end_date', 'desc')
                     ->first();
 
                 if ($lastPayment) {
+                    // Start from the last coverage end date
                     $coverageStartDate = Carbon::parse($lastPayment->coverage_end_date);
                 } else {
-                    $coverageStartDate = Carbon::parse($deceased->date_of_burial);
+                    // If no previous coverage found, calculate from burial date
+                    $burialDate = Carbon::parse($deceased->date_of_burial);
+                    $coverageStartDate = $burialDate->copy()->addYears(5);
                 }
+
+                // Add 5 years for renewal coverage
                 $coverageEndDate = $coverageStartDate->copy()->addYears(5);
                 $coverageStatus = 'renewal';
+                $remainingBalance = 0; // Renewals have no balance tracking
+            }
+            // Handle INITIAL and BALANCE payments
+            elseif ($validated['payment_for'] === 'initial' || $validated['payment_for'] === 'balance') {
+                // Check if already fully paid
+                if ($deceased->balance <= 0 && $deceased->is_fully_paid) {
+                    return back()->withErrors(['amount' => 'This record is already fully paid. Use renewal payment instead.']);
+                }
+
+                // Validate payment amount
+                if ($validated['amount'] > $deceased->balance) {
+                    return back()->withErrors(['amount' => 'Payment amount cannot exceed remaining balance of ₱' . number_format($deceased->balance, 2)]);
+                }
+
+                // Check minimum down payment for first payment
+                if ($deceased->amount_paid == 0 && $validated['amount'] < 2500) {
+                    return back()->withErrors(['amount' => 'Minimum down payment is ₱2,500.00 (50% of total amount)']);
+                }
+
+                // Calculate new balance
+                $newAmountPaid = $deceased->amount_paid + $validated['amount'];
+                $newBalance = $deceased->balance - $validated['amount'];
+                $isFullyPaid = $newBalance <= 0;
+
+                // Set coverage dates only if fully paid
+                if ($isFullyPaid) {
+                    $coverageStartDate = Carbon::parse($deceased->date_of_burial);
+                    $coverageEndDate = $coverageStartDate->copy()->addYears(5);
+                    $coverageStatus = 'initial';
+                }
+
+                $remainingBalance = max(0, $newBalance);
+            }
+            // Handle PENALTY payments
+            elseif ($validated['payment_for'] === 'penalty') {
+                // Penalties don't affect balance or coverage
+                $remainingBalance = $deceased->balance;
             }
 
-            $validated['receipt_number'] = 'RCP-' . date('Ymd') . '-' . strtoupper(Str::random(6));
-            $validated['received_by'] = Auth::id();
-            $validated['previous_balance'] = $deceased->balance;
-            $validated['coverage_status'] = $coverageStatus;
-            $validated['coverage_start_date'] = $coverageStartDate;
-            $validated['coverage_end_date'] = $coverageEndDate;
+            // Generate receipt number
+            $receiptNumber = 'RCP-' . date('Ymd') . '-' . strtoupper(Str::random(6));
 
-            $paymentRecord = PaymentRecord::create($validated);
+            // Create payment record
+            $paymentRecord = PaymentRecord::create([
+                'deceased_record_id' => $validated['deceased_record_id'],
+                'amount' => $validated['amount'],
+                'payment_date' => $validated['payment_date'],
+                'payment_type' => $validated['payment_type'],
+                'payment_for' => $validated['payment_for'],
+                'payment_method' => $validated['payment_method'],
+                'official_receipt_number' => $validated['official_receipt_number'],
+                'remarks' => $validated['remarks'],
+                'receipt_number' => $receiptNumber,
+                'received_by' => Auth::id(),
+                'previous_balance' => $deceased->balance,
+                'remaining_balance' => $remainingBalance,
+                'coverage_status' => $coverageStatus,
+                'coverage_start_date' => $coverageStartDate,
+                'coverage_end_date' => $coverageEndDate,
+            ]);
 
-            if ($validated['payment_for'] === 'initial' || $validated['payment_for'] === 'balance') {
-                $updateData = [
-                    'amount_paid' => $newAmountPaid,
-                    'balance' => max(0, $newBalance),
-                    'last_payment_date' => $validated['payment_date']
-                ];
-
-                if ($newBalance <= 0) {
-                    $updateData['is_fully_paid'] = true;
-                    $updateData['payment_status'] = 'paid';
-                    $updateData['payment_due_date'] = $coverageEndDate;
-                } else {
-                    $updateData['payment_status'] = 'pending';
-                }
-
-                $deceased->update($updateData);
-
-                $paymentRecord->update([
-                    'remaining_balance' => max(0, $newBalance)
-                ]);
-            } elseif ($validated['payment_type'] === 'renewal') {
-                if (!$deceased->is_fully_paid) {
-                    return back()->withErrors(['error' => 'Cannot process renewal. Initial payment must be fully paid first.']);
-                }
-
+            // Update deceased record based on payment type
+            if ($validated['payment_for'] === 'renewal') {
+                // Update deceased record with new renewal coverage
                 $deceased->update([
                     'payment_status' => 'paid',
                     'payment_due_date' => $coverageEndDate,
                     'last_payment_date' => $validated['payment_date']
                 ]);
 
+                // Calculate renewal balance and payment status
+                $renewalBalance = 5000 - $validated['amount'];
+                $renewalIsFullyPaid = $renewalBalance <= 0;
+                $renewalPaymentStatus = $renewalIsFullyPaid ? 'paid' : 'partial';
+
+                // Create renewal record
                 RenewalRecord::create([
                     'deceased_record_id' => $validated['deceased_record_id'],
                     'renewal_date' => $validated['payment_date'],
                     'next_renewal_date' => $coverageEndDate,
-                    'renewal_fee' => $validated['amount'],
-                    'total_amount_due' => $validated['amount'],
+                    'renewal_fee' => 5000,
+                    'total_amount_due' => 5000,
                     'amount_paid' => $validated['amount'],
-                    'balance' => 0,
-                    'is_fully_paid' => true,
-                    'payment_status' => 'paid',
+                    'balance' => max(0, $renewalBalance),
+                    'is_fully_paid' => $renewalIsFullyPaid,
+                    'payment_status' => $renewalPaymentStatus,
                     'status' => 'active',
                     'processed_by' => Auth::id(),
                     'remarks' => $validated['remarks']
                 ]);
+
+                $successMessage = 'Renewal payment recorded successfully. Receipt #: ' . $receiptNumber .
+                    ' | Coverage extended until ' . $coverageEndDate->format('M d, Y');
+            } elseif ($validated['payment_for'] === 'initial' || $validated['payment_for'] === 'balance') {
+                $updateData = [
+                    'amount_paid' => $newAmountPaid,
+                    'balance' => max(0, $newBalance),
+                    'last_payment_date' => $validated['payment_date']
+                ];
+
+                // If fully paid, update payment status and set due date
+                if ($newBalance <= 0) {
+                    $updateData['is_fully_paid'] = true;
+                    $updateData['payment_status'] = 'paid';
+                    $updateData['payment_due_date'] = $coverageEndDate;
+
+                    $successMessage = 'Payment recorded successfully. Receipt #: ' . $receiptNumber .
+                        ' | FULLY PAID - Coverage active until ' . $coverageEndDate->format('M d, Y');
+                } else {
+                    $updateData['payment_status'] = 'pending';
+
+                    $successMessage = 'Payment recorded successfully. Receipt #: ' . $receiptNumber .
+                        ' | Remaining Balance: ₱' . number_format(max(0, $newBalance), 2);
+                }
+
+                $deceased->update($updateData);
+            } elseif ($validated['payment_for'] === 'penalty') {
+                $deceased->update([
+                    'last_payment_date' => $validated['payment_date']
+                ]);
+
+                $successMessage = 'Penalty payment recorded successfully. Receipt #: ' . $receiptNumber;
             }
 
             DB::commit();
 
-            $message = 'Payment recorded successfully. Receipt #: ' . $paymentRecord->receipt_number;
-            if ($deceased->balance > 0) {
-                $message .= ' | Remaining Balance: ₱' . number_format($deceased->balance, 2);
-            } else {
-                $message .= ' | FULLY PAID - Coverage active until ' . date('M d, Y', strtotime($coverageEndDate));
-            }
-
-            return redirect()->route('payments.index')->with('success', $message);
+            return redirect()->route('payments.index')->with('success', $successMessage);
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->withErrors(['error' => 'Failed to record payment: ' . $e->getMessage()]);

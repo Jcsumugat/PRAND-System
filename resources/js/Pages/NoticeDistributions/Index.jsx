@@ -183,13 +183,6 @@ export default function Index({ notices, filters }) {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-center">
                                                 <div className="flex justify-center space-x-2">
-                                                    <Link
-                                                        href={route('notices.show', notice.id)}
-                                                        className="flex items-center px-3 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition"
-                                                        title="View"
-                                                    >
-                                                        <EyeIcon className="h-4 w-4" />
-                                                    </Link>
                                                     {notice.status === 'failed' && (
                                                         <button
                                                             onClick={() => handleResend(notice.id)}

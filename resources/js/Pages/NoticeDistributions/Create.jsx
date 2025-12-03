@@ -438,7 +438,7 @@ Thank you.`,
                                 <div>
                                     <InputLabel
                                         htmlFor="recipient_name"
-                                        value="Recipient Name (Next of Kin) *"
+                                        value="Recipient Name (Payor)*"
                                         className="text-gray-700 font-semibold"
                                     />
                                     <TextInput
@@ -516,9 +516,6 @@ Thank you.`,
                                         }}
                                         required
                                     >
-                                        <option value="general">
-                                            General Notice
-                                        </option>
                                         <option value="payment_reminder">
                                             Payment Reminder (includes balance & due date)
                                         </option>
